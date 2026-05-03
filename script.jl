@@ -3,8 +3,8 @@
 using Distributed, SlurmClusterManager
 addprocs(SlurmManager())
 
-@everywhere include("estimate.jl")
-@everywhere include("generate.jl")
+@everywhere include("/scratch/users/jgottf/cocci/estimate.jl")
+@everywhere include("/scratch/users/jgottf/cocci/generate.jl")
 @everywhere using JLD2
 
 @everywhere n = 25
