@@ -4,13 +4,8 @@ using JLD2
 include("estimate.jl")
 include("generate.jl")
 
-n = 50
-l1 = 50
-m = 100000
-ρs = 0:0.1:10
-
-results = estimate.rhogrid(n, l1, ρs, m)
-# load_object("results/results_1.jld2")
+# insert code to accumulate results!
+# load_object("results/results.jld2")
 
 ρ = 2
 θ = 100
