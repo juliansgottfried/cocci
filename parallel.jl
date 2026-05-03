@@ -7,10 +7,10 @@ addprocs(SlurmManager())
 @everywhere include("/scratch/users/jgottf/cocci/generate.jl")
 @everywhere using JLD2
 
-@everywhere n = 25
-@everywhere l1 = 50
-@everywhere m = 1000
-@everywhere ρs = 0:0.1:10
+@everywhere n = 50
+@everywhere l1 = 100
+@everywhere m = 100000
+@everywhere ρs = 0:0.1:20
 
 pmap(ρs) do ρ
 	results = estimate.montecarlo(n, l1, ρ, m)
