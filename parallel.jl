@@ -10,9 +10,9 @@ addprocs(SlurmManager())
 @everywhere n = 50
 @everywhere l1 = 100
 @everywhere m = 100000
-@everywhere ρs = 0:0.1:20
+@everywhere ρs = 6:0.1:15
 
 pmap(ρs) do ρ
 	results = estimate.montecarlo(n, l1, ρ, m)
-    save_object(string("/scratch/users/jgottf/cocci/results/results_",replace(string(ρ), "." => "_"), ".jld2"), [results, (n, l1, m, ρ)])
+	save_object(string("/scratch/users/jgottf/cocci/results/results_",replace(string(ρ), "." => "_"), ".jld2"), [results, (n, l1, m, ρ)])
 end
