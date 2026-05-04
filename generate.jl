@@ -1,10 +1,10 @@
 module generate
 
-using Intervals
+using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
 import StatsBase
 import Distributions
 
-# https://invenia.github.io/Intervals.jl/latest/#API-1
+include("estimate.jl")
 
 initialize = function(n, l1)
     intervalsn = [[] for _ in 1:l1]
@@ -258,8 +258,11 @@ getconfigs = function(n, l1, ρ, θ)
 
     nmut = size(allmutations)[1]
     contains = falses(nmut, n)
-    for i in 1:nmut, j in 1:n
-        contains[i, j] = sum(allmutations[i] .== mutants[j])
+    for j in 1:n
+        if length(mutants[j]) == 0 continue end
+        for i in 1:nmut
+            contains[i, j] = sum(allmutations[i] .== mutants[j])
+        end
     end
 
     loci = (1:nmut)[0 .< sum(contains, dims = 2) .< n]
@@ -278,6 +281,21 @@ getconfigs = function(n, l1, ρ, θ)
     end
 
     (configs, dists)
+end
+
+repeated = function(ρs, collect, pseudo, n, l1, ρ, θ, J)
+    ρhat = zeros(Float64, J)
+    for j in 1:J
+        println("sample $(j)")
+        configs, dists = generate.getconfigs(n, l1, ρ, θ)
+        while length(configs) == 0 
+            configs, dists = generate.getconfigs(n, l1, ρ, θ) 
+        end
+        loglik = estimate.getl(ρs, n, collect, configs, dists, pseudo)
+        ρhat[j] = ρs[argmax(loglik)]
+    end
+    
+    ρhat
 end
 
 end
