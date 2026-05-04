@@ -102,10 +102,10 @@ simulator = function(n, l1, ρ)
     (leavesb, timeb, numberb)
 end
 
-geth! = function(blackidx, whiteidx, config3, leavesb, timeb)
+geth! = function(blackidx, whiteidx, thisconfig, leavesb, timeb)
     for i in blackidx, j in whiteidx
         shared = sum(leavesb[:, i, 1] .& leavesb[:, j, 2])
-        config3[2][shared .== config3[1]] .+= timeb[i] * timeb[j]
+        thisconfig[2][shared .== thisconfig[1]] .+= timeb[i] * timeb[j]
     end
 end
 
@@ -119,7 +119,7 @@ configloop = function(allconfigs, n, leavesb, timeb, numberb)
     
     for config1 in 1:(n - 1)
         blackidx = (1:numberb)[checker[:, config1, 1]]
-        for config2 in 1:(n - 1)
+        for config2 in 1:config1
             whiteidx = (1:numberb)[checker[:, config2, 2]]
             geth!(blackidx, whiteidx, allconfigs[config1, config2], leavesb, timeb)
         end
@@ -134,7 +134,7 @@ buildallconfigs = function(i, j, n)
 end
 
 sumallconfigs! = function(allconfigs, add, n, m)
-    for i in 1:(n - 1), j in 1:(n - 1)
+    for i in 1:(n - 1), j in 1:i
         allconfigs[i, j][2] += add[i, j][2] ./ m
     end
 end
@@ -152,7 +152,7 @@ montecarlo = function(n, l1, ρ, m)
     allconfigs
 end
 
-rhogrid = function(n, l1, ρs, m)
+#= rhogrid = function(n, l1, ρs, m)
     for i in eachindex(ρs)
         println("ρ: ", ρs[i])
         results = montecarlo(n, l1, ρs[i], m)
@@ -160,12 +160,14 @@ rhogrid = function(n, l1, ρs, m)
     end
 
     results
-end
+end =#
 
 getsum = function(allconfigs, n, pseudo)
     summer = 0
-    for i in 1:(n - 1), j in 1:(n - 1)
-        summer += sum(allconfigs[i, j][2] .+ pseudo)
+    for i in 1:(n - 1), j in 1:i
+        tmpsum = sum(allconfigs[i, j][2] .+ pseudo)
+        if i != j tmpsum *= 2 end
+        summer += tmpsum
     end
 
     summer
@@ -175,18 +177,17 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     l = size(ρs)[1]
     loglik = zeros(Float64, l)
     for i in 1:l
-        # println("i: ",i)
         denom = getsum(results[i], n, pseudo)
         for j in 1:size(configs)[1]
-            # println("j: ",j)
+            config1 = maximum(configs[j, 1:2])
+            config2 = minimum(configs[j, 1:2])
             ρidx = argmin(((dists[j] * ρs[i]) .- ρs) .^ 2)
-            extract = results[ρidx][configs[j, 1], configs[j, 2]]
-            numer = extract[2][extract[1] .== configs[j, 3]][1]
-            if configs[j, 1] !=  configs[j, 2] numer *= 2 end
-            numer += pseudo
+            extract = results[ρidx][config1, config2]
+            numer = extract[2][extract[1] .== configs[j, 3]][1] + pseudo
+            if config1 != config2 numer *= 2 end
             qc = log(numer / denom)
             if !isinf(qc) loglik[i] += qc 
-            else 0 end
+            else println("uh oh") end
         end
     end
 
