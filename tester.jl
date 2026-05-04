@@ -16,12 +16,24 @@ n = 50
 l1 = 100
 m = 100000
 
+minval = Inf
+for i in eachindex(ρs)
+    collect[i]
+    for j in 1:(n - 1), k in 1:(n - 1)
+        tmpvec = collect[i][j, k][2]
+        tmpmin = minimum(tmpvec[tmpvec .> 0])
+        if tmpmin < minval
+            minval = tmpmin
+        end
+    end
+end
+
 # for ground truth
 ρ = 10
-θ = 100
+θ = 5
 configs, dists = generate.getconfigs(n, l1, ρ, θ)
 
-pseudo = 0.001
+pseudo = minval
 loglik = estimate.getl(ρs, n, collect, configs, dists, pseudo)
 
 plot(ρs, loglik, xlabel = "ρ", ylabel = "loglik",

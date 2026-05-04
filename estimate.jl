@@ -181,7 +181,9 @@ getl = function(ρs, n, results, configs, dists, pseudo)
             # println("j: ",j)
             ρidx = argmin(((dists[j] * ρs[i]) .- ρs) .^ 2)
             extract = results[ρidx][configs[j, 1], configs[j, 2]]
-            numer = extract[2][extract[1] .== configs[j, 3]][1] + pseudo
+            numer = extract[2][extract[1] .== configs[j, 3]][1]
+            if configs[j, 1] !=  configs[j, 2] numer *= 2 end
+            numer += pseudo
             qc = log(numer / denom)
             if !isinf(qc) loglik[i] += qc 
             else 0 end
