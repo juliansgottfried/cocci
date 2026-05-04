@@ -27,9 +27,10 @@ for i in eachindex(ρs)
         end
     end
 end
+minval /= 10
 
 # for ground truth
-ρ = 10
+ρ = 5
 θ = 5
 configs, dists = generate.getconfigs(n, l1, ρ, θ)
 
