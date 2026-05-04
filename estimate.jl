@@ -156,7 +156,7 @@ rhogrid = function(n, l1, ρs, m)
     for i in eachindex(ρs)
         println("ρ: ", ρs[i])
         results = montecarlo(n, l1, ρs[i], m)
-        JLD2.save_object(string("results/results_", i, ".jld2"), [results, (n, l1, m, ρs[i])])
+        JLD2.save_object(string("/scratch/users/jgottf/cocci/results/results_",replace(string(ρs[i]), "." => "_"), ".jld2"), [results, (n, l1, m, ρs[i])])
     end
 
     results
