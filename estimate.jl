@@ -194,7 +194,7 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     loglik
 end
 
-getpseudo = function(ρs, collect)
+getpseudo = function(ρs, collect, n)
     pseudo = Inf
     for i in eachindex(ρs)
         collect[i]

@@ -18,7 +18,7 @@ addprocs(SlurmManager())
 	push!(collect, load_object(i)[1])
 end
 
-@everywhere pseudo = estimate.getpseudo(ρs, collect)
+@everywhere pseudo = estimate.getpseudo(ρs, collect, n)
 @everywhere J = 2
 @everywhere θ = 10
 
