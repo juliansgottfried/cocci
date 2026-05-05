@@ -31,10 +31,10 @@ end
 end
 @everywhere pseudo /= 10
 
-@everywhere J = 1000
+@everywhere J = 2
 @everywhere θ = 10
 
-pmap(ρs) do ρ
+pmap(1) do ρ
 	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ, θ, J)
 	save_object(string("/scratch/users/jgottf/cocci/results/data/run_5_4_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [ρhat, (ρ, θ, J)])
 end
