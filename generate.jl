@@ -4,8 +4,8 @@ using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
 import StatsBase
 import Distributions
 
-include("estimate.jl")
-# include("/scratch/users/jgottf/cocci/estimate.jl")
+# include("estimate.jl")
+include("/scratch/users/jgottf/cocci/estimate.jl")
 
 initialize = function(n, l1)
     intervalsn = [[] for _ in 1:l1]
