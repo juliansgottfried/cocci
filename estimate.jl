@@ -194,4 +194,20 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     loglik
 end
 
+getpseudo = function(ρs, collect)
+    pseudo = Inf
+    for i in eachindex(ρs)
+        collect[i]
+        for j in 1:(n - 1), k in 1:j
+            tmpvec = collect[i][j, k][2]
+            tmpmin = minimum(tmpvec[tmpvec .> 0])
+            if tmpmin < pseudo
+                pseudo = tmpmin
+            end
+        end
+    end
+    
+    pseudo / 10
+end
+
 end

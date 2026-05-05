@@ -18,18 +18,7 @@ addprocs(SlurmManager())
 	push!(collect, load_object(i)[1])
 end
 
-@everywhere pseudo = Inf
-@everywhere for i in eachindex(ρs)
-	collect[i]
-    for j in 1:(n - 1), k in 1:j
-        tmpvec = collect[i][j, k][2]
-        tmpmin = minimum(tmpvec[tmpvec .> 0])
-        if tmpmin < pseudo
-            pseudo = tmpmin
-        end
-    end
-end
-@everywhere pseudo /= 10
+@everywhere pseudo = estimate.getpseudo(ρs, collect)
 
 @everywhere J = 1000
 @everywhere θ = 10
