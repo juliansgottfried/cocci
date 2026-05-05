@@ -1,11 +1,12 @@
 using Plots
+import StatsPlots
 using JLD2
 
 include("estimate.jl")
 include("generate.jl")
 
 ρs = 0:0.1:15
-filenames = string.("./results/results_", replace.(string.(ρs), "." => "_"), ".jld2")
+filenames = string.("./results/prob/run_5_3_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 collect = []
 for i in filenames
     push!(collect, load_object(i)[1])
@@ -43,6 +44,8 @@ vline!([ρ], label = false, color = :red)
 # many runs
 J = 100
 ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ, θ, J)
-plot(1:J, ρhat,  xlabel = "sample", ylabel = "ρ_hat / ρ",
+plot(1:J, ρhat/ρ,  xlabel = "sample", ylabel = "ρ_hat / ρ",
     label = false, color = :black)
-hline!([ρ], label = false, color = :red)
+hline!([1], label = false, color = :red)
+
+StatsPlots.density(ρhat/ρ, label = false, color = :black)

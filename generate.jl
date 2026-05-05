@@ -4,7 +4,8 @@ using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
 import StatsBase
 import Distributions
 
-include("estimate.jl")
+# include("estimate.jl")
+include("/scratch/users/jgottf/cocci/estimate.jl")
 
 initialize = function(n, l1)
     intervalsn = [[] for _ in 1:l1]
@@ -230,12 +231,7 @@ simulator = function(n, l1, ρ)
     (intervalsb, leavesb, timeb, numberb)
 end
 
-getconfig = function(input)
-    config = sum(input, dims = 2)[:, 1]
-    push!(config, sum(input[1, :] .& input[2, :]))
-end
-
-getconfigs = function(n, l1, ρ, θ)
+generatemut = function(n, l1, ρ, θ)
     intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ)
 
     mutants = [[] for _ in 1:n]
@@ -265,7 +261,18 @@ getconfigs = function(n, l1, ρ, θ)
         end
     end
 
-    loci = (1:nmut)[0 .< sum(contains, dims = 2) .< n]
+    (contains, allmutations)
+end
+
+getconfig = function(input)
+    config = sum(input, dims = 2)[:, 1]
+    push!(config, sum(input[1, :] .& input[2, :]))
+end
+
+getconfigs = function(n, l1, ρ, θ)
+    contains, allmutations = generatemut(n, l1, ρ, θ)
+
+    loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
     subset = contains[loci, :]
 
     nloci = size(loci)[1]

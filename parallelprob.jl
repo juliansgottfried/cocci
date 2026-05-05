@@ -14,5 +14,5 @@ addprocs(SlurmManager())
 
 pmap(ρs) do ρ
 	results = estimate.montecarlo(n, l1, ρ, m)
-	save_object(string("/scratch/users/jgottf/cocci/results/results_",replace(string(ρ), "." => "_"), ".jld2"), [results, (n, l1, m, ρ)])
+	save_object(string("/scratch/users/jgottf/cocci/results/prob/run_5_3_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [results, (n, l1, m, ρ)])
 end
