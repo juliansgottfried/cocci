@@ -25,5 +25,5 @@ end
 
 pmap(ρs) do ρ
 	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ, ρ, J)
-	save_object(string("/scratch/users/jgottf/cocci/results/data/run_5_4_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [ρhat, (ρ, θ, J)])
+	save_object(string("/scratch/users/jgottf/cocci/results/data/run_5_5_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [ρhat, (ρ, θ, J)])
 end

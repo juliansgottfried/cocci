@@ -7,7 +7,7 @@ include("estimate.jl")
 include("generate.jl")
 
 ρs = 0:0.1:15
-filenames = string.("./results/data/run_5_4_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
+filenames = string.("./results/data/run_5_5_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 collect = []
 for i in filenames
     push!(collect, load_object(i)[1])
