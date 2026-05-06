@@ -7,6 +7,7 @@ include("estimate.jl")
 include("generate.jl")
 
 ρs = [0:0.1:10; 11:19; 20:5:100]
+# ρs = 0:0.1:15
 filenames = string.("/Users/juliangottfried/Desktop/cocci/results/data/run_5_6_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 collect = []
 for i in filenames
@@ -22,7 +23,7 @@ plotter[plotter .== -Inf] .= minimum(plotter[plotter .!= -Inf])
 plot(ρs[2:end], plotter[:, 1], fillrange = plotter[:, 3], 
     xlabel = "recombination rate ρ", ylabel = "log₂ ρ hat / ρ",
     title = "Estimation error",
-    xlim = [0, 15], fillalpha = 0.15, c = "#29a0c8",
+    xlim = [minimum(ρs), maximum(ρs)], fillalpha = 0.15, c = "#29a0c8",
     linecolor = false, label = false, grid = false)
 hline!([0], c = :red, alpha = 0.7, label = false)
 plot!(ρs[2:end], plotter[:, 2],
