@@ -21,8 +21,7 @@ end
 plotter[plotter .== -Inf] .= minimum(plotter[plotter .!= -Inf])
 
 plot(ρs[2:end], plotter[:, 1], fillrange = plotter[:, 3], 
-    xlabel = "recombination rate ρ", ylabel = "log₂ ρ hat / ρ",
-    title = "Estimation error",
+    xlabel = "recombination rate ρ", ylabel = "log₂ relative error",
     xlim = [minimum(ρs), maximum(ρs)], fillalpha = 0.15, c = "#29a0c8",
     linecolor = false, label = false, grid = false)
 hline!([0], c = :red, alpha = 0.7, label = false)
