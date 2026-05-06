@@ -6,8 +6,8 @@ import Statistics
 include("estimate.jl")
 include("generate.jl")
 
-ρs = 0:0.1:15
-filenames = string.("./results/data/run_5_5_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
+ρs = [0:0.1:10; 11:19; 20:5:100]
+filenames = string.("/Users/juliangottfried/Desktop/cocci/results/data/run_5_6_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 collect = []
 for i in filenames
     push!(collect, load_object(i)[1])
