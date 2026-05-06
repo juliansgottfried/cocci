@@ -1,10 +1,10 @@
 ml julia
 
 sbatch \
-    --nodes=5 \
+    --nodes=10 \
     --ntasks-per-node=10 \
-    --mem=4G \
-    --time=120 \
+    --mem=10G \
+    --time=180 \
     --output=/scratch/users/jgottf/cocci/output/%j.out \
     --mail-type=ALL \
     --mail-user=juliansgottfried@gmail.com \
