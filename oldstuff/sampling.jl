@@ -51,7 +51,8 @@ function segfreq_1(G, η)
         # sums[i] = sum(freq)
         freq ./= sum(freq)
     end
-    freq[2:size] ./ sum(freq[2:size])
+    # freq[2:size] ./ sum(freq[2:size])
+    freq ./ sum(freq)
     # freq[2:size]
     # sums
 end
@@ -114,42 +115,42 @@ end
 seg_mat_rev = seg_mat[:, n_η:-1:1]
 
 L = 0:0.01:1
-accum = zeros(Float64, 500, 101)
+accum = ones(Float64, 500, 101)
 for i in 1:500
     vec = seg_mat_rev[:, i]
-    for j in 1:49
-        accum[i, :] .+= vec[j] .* (1 .- (1 .- L) .^ j)
+    for j in 0:49
+        accum[i, :] .-= vec[j + 1] .* (1 .- L) .^ j
     end
 end
 
-L = 0:0.01:1
-breaks = 1.01:0.04:21
-accum2 = zeros(Float64, 500, 101)
-for i in 1:500
-    accum2[i, :] .= 1 .- (1 .- L) .^ breaks[i]
-end
+# L = 0:0.01:1
+# breaks = 1.01:0.04:21
+# accum2 = zeros(Float64, 500, 101)
+# for i in 1:500
+#     accum2[i, :] .= 1 .- (1 .- L) .^ breaks[i]
+# end
 
 colors = ["#EB2F89", "#EACD55"]
 l = @layout [a{0.95w} b]
 p1 = plot(L, accum',
             xlim = [0, 1], ylim = [0, 1];
             palette = palette(colors, 500),
-            alpha = 0.8, label = false,
-            linewidth = 0.1,
-            xlabel = "d",ylabel= "r",
+            alpha = 0.25, label = false,
+            linewidth = 0.8,
+            xlabel = "distance between loci", ylabel= "two-locus ρ",
             grid = false)
-plot!(L, accum'[:, [1; 100; 200; 300; 400; 500]],
+#= plot!(L, accum'[:, [1; 10; 50; 100; 200; 300; 400; 500]],
             xlim = [0, 1], ylim = [0, 1];
             color = :black, linewidth = 0.6,
             alpha = 0.8,
             label = false,
-            grid = false)
+            grid = false) =#
 p2 = heatmap(rand(2, 2), clims = (0.1, 50),
             framestyle = :none,
             c = palette(colors, ηs),
             cbar = true,
             lims = (-1, 0),
-            cbartitle = "(1-η)e3")
+            cbartitle = "1000 * r")
 plot(p1, p2, layout=l)
 
 
