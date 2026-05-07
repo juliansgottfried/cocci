@@ -12,7 +12,7 @@ addprocs(SlurmManager())
 @everywhere m = 100000
 @everywhere ρs = [0:0.1:10; 11:1:19; 20:5:100]
 
-@everywhere filenames = string.("/scratch/users/jgottf/cocci/results/prob/run_5_3_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
+@everywhere filenames = string.("/scratch/users/jgottf/cocci/results/prob/run_5_6_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 @everywhere collect = []
 @everywhere for i in filenames
 	push!(collect, load_object(i)[1])
