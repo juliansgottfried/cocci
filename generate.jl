@@ -333,6 +333,20 @@ end
 
 getfilename = function(type, date, ρ)
 	string(
+			"results/",
+			type,
+			"/run_",
+			date,
+			"/rho0_", 
+			replace(string(ρ[1]), "." => "-"), 
+			"_rho1_",
+			replace(string(ρ[2]), "." => "-"), 
+			".jld2"
+		)
+end
+
+getfilenamereal = function(type, date, ρ)
+	string(
 			"/scratch/users/jgottf/cocci/results/",
 			type,
 			"/run_",

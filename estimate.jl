@@ -200,6 +200,7 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     loglik = zeros(Float64, l)
     denom = zeros(Float64, l)
     for i in 1:l denom[i] = getsum(results[i], n, pseudo) end
+    ρidx = Inf
     for i in 1:l
         for j in 1:size(configs)[1]
             config1 = maximum(configs[j, 1:2])
@@ -207,7 +208,7 @@ getl = function(ρs, n, results, configs, dists, pseudo)
 
             a = [(ρ[1] - dists[j] * ρs[i][1]).^2 for ρ in ρs]
             b = [(ρ[2] - dists[j] * ρs[i][2]).^2 for ρ in ρs]
-            ρidx = (1:length(ρs))[(a .== minimum(a)) .& (b .== minimum(b))]
+            ρidx = (1:length(ρs))[(a .== minimum(a)) .& (b .== minimum(b))][1]
 
             extract = results[ρidx][config1, config2]
             numer = extract[2][extract[1] .== configs[j, 3]][1] + pseudo
@@ -226,7 +227,9 @@ getpseudo = function(collect, n)
     for i in eachindex(collect)
         for j in 1:(n - 1), k in 1:j
             tmpvec = collect[i][j, k][2]
-            tmpmin = minimum(tmpvec[tmpvec .> 0])
+            nonzero = tmpvec[tmpvec .> 0]
+            if length(nonzero) == 0 continue end
+            tmpmin = minimum(nonzero)
             if tmpmin < pseudo
                 pseudo = tmpmin
             end
