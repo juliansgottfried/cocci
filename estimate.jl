@@ -200,7 +200,6 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     loglik = zeros(Float64, l)
     denom = zeros(Float64, l)
     for i in 1:l denom[i] = getsum(results[i], n, pseudo) end
-    ρidx = Inf
     for i in 1:l
         for j in 1:size(configs)[1]
             config1 = maximum(configs[j, 1:2])

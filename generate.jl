@@ -331,7 +331,7 @@ makegrid = function(maxρ)
     ρs
 end
 
-getfilename = function(type, date, ρ)
+getfilenamelocal = function(type, date, ρ)
 	string(
 			"results/",
 			type,
@@ -345,7 +345,7 @@ getfilename = function(type, date, ρ)
 		)
 end
 
-getfilenamereal = function(type, date, ρ)
+getfilename = function(type, date, ρ)
 	string(
 			"/scratch/users/jgottf/cocci/results/",
 			type,
