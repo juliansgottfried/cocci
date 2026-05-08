@@ -38,28 +38,58 @@ expand = function(leavesn, ancestor, timen, leavesb, timeb, n, l1)
     (newleavesn, newancestor, newtimen, newleavesb, newtimeb, 2l1)
 end
 
-simulator = function(n, l1, ρ)
+getintegral = function(covariate, dt, time)
+    timecut = Int(time ÷ dt) + 1
+    if timecut >= size(covariate)[1] return sum(covariate[:, 2]) * dt end
+    sum(covariate[1:timecut, 2]) * dt + 
+        covariate[timecut + 1, 2] * mod(time, dt)
+end
+
+getvalue = function(covariate, dt, time)
+    timecut = Int(time ÷ dt) + 1
+    if timecut >= size(covariate)[1] return covariate[end, 2] end
+    covariate[timecut, 2]
+end
+
+Λ = function(K, ρ0, ρ1, time, covariate, dt)
+    0.5K * ((K - 1 + ρ0) * time + ρ1 * getintegral(covariate, dt, time))
+end
+
+targetf = function(K, ρ0, ρ1, next, covariate, dt, time)
+    0.5K * (K - 1 + ρ0 + ρ1 * getvalue(covariate, dt, next)) * exp(Λ(K, ρ0, ρ1, time, covariate, dt) - Λ(K, ρ0, ρ1, next, covariate, dt))
+end
+
+M = function(λ, K, ρ1, covariate, dt, time)
+    (λ + 0.5K * ρ1 * getvalue(covariate, dt, time)) / (λ * exp(-λ * time))
+end
+
+simulator = function(n, l1, ρ0, ρ1, covariate, dt)
     leavesn, ancestor, timen, leavesb, timeb = initialize(n, l1)
     
     numbern = n
     numberb = 0
     time = 0.0
+    next = 0.0
     K = n
     
     while K > 1
         # println(K)
         
-        ρ_eff = 0.0
+        ϕ = 0.0
         hasleaves = (sum(leavesn, dims = 1) .> 0)[1, :, :]
-        
         if sum(hasleaves[ancestor, 1]) > 1 && sum(hasleaves[ancestor, 2]) > 1
-            ρ_eff = ρ * sum(hasleaves[ancestor, 1] .& hasleaves[ancestor, 2]) / K
+            ϕ = sum(hasleaves[ancestor, 1] .& hasleaves[ancestor, 2]) / K
         end
        
-        λ = (K * (K - 1 + ρ_eff)) / 2
-        time -= log(1 - rand()) / λ
+        λ = 0.5K * (K - 1 + ϕ * ρ0)
+        comparison = false
+        while !comparison
+            next = time - log(1 - rand()) / λ
+            comparison = rand() <= targetf(K, ϕ * ρ0, ϕ * ρ1, next, covariate, dt, time) / (M(λ, K, ϕ * ρ1, covariate, dt, time) * λ * exp(-λ * next))
+        end
+        time = next
         
-        if rand() > ρ_eff / (K - 1 + ρ_eff)
+        if rand() < (K - 1) / (K - 1 + ϕ * ρ0 + ϕ * ρ1 * getvalue(covariate, dt, time))
             chosen = StatsBase.sample((1:l1)[ancestor], 2, replace = false)
             ancestor[chosen] .= 0
             numbern += 1
@@ -139,28 +169,18 @@ sumallconfigs! = function(allconfigs, add, n, m)
     end
 end
 
-montecarlo = function(n, l1, ρ, m)
+montecarlo = function(n, l1, ρ0, ρ1, covariate, dt, m)
     allconfigs = [buildallconfigs(i, j, n) for i = 1:(n - 1), j = 1:(n - 1)]
 
     for i in 1:m
         mod(i,1000) == 0 && println("Iteration ", i)
-        leavesb, timeb, numberb = simulator(n, l1, ρ)
+        leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, dt)
         add = configloop(allconfigs, n, leavesb, timeb, numberb)
         sumallconfigs!(allconfigs, add, n, m)
     end
 
     allconfigs
 end
-
-#= rhogrid = function(n, l1, ρs, m)
-    for i in eachindex(ρs)
-        println("ρ: ", ρs[i])
-        results = montecarlo(n, l1, ρs[i], m)
-        JLD2.save_object(string("/scratch/users/jgottf/cocci/results/results_",replace(string(ρs[i]), "." => "_"), ".jld2"), [results, (n, l1, m, ρs[i])])
-    end
-
-    results
-end =#
 
 getsum = function(allconfigs, n, pseudo)
     summer = 0
@@ -174,18 +194,25 @@ getsum = function(allconfigs, n, pseudo)
 end
 
 getl = function(ρs, n, results, configs, dists, pseudo)
-    l = size(ρs)[1]
+    # ρs = []
+    # for i in 1:10 push!(ρs, [0.0; i/10]) end
+    l = length(ρs)
     loglik = zeros(Float64, l)
+    denom = zeros(Float64, l)
+    for i in 1:l denom[i] = getsum(results[i], n, pseudo) end
     for i in 1:l
-        denom = getsum(results[i], n, pseudo)
         for j in 1:size(configs)[1]
             config1 = maximum(configs[j, 1:2])
             config2 = minimum(configs[j, 1:2])
-            ρidx = argmin(((dists[j] * ρs[i]) .- ρs) .^ 2)
+
+            a = [(ρ[1] - dists[j] * ρs[i][1]).^2 for ρ in ρs]
+            b = [(ρ[2] - dists[j] * ρs[i][2]).^2 for ρ in ρs]
+            ρidx = (1:length(ρs))[(a .== minimum(a)) .& (b .== minimum(b))]
+
             extract = results[ρidx][config1, config2]
             numer = extract[2][extract[1] .== configs[j, 3]][1] + pseudo
             if config1 != config2 numer *= 2 end
-            qc = log(numer / denom)
+            qc = log(numer / denom[ρidx])
             if !isinf(qc) loglik[i] += qc 
             else println("uh oh") end
         end
@@ -194,10 +221,9 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     loglik
 end
 
-getpseudo = function(ρs, collect, n)
+getpseudo = function(collect, n)
     pseudo = Inf
-    for i in eachindex(ρs)
-        collect[i]
+    for i in eachindex(collect)
         for j in 1:(n - 1), k in 1:j
             tmpvec = collect[i][j, k][2]
             tmpmin = minimum(tmpvec[tmpvec .> 0])

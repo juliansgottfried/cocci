@@ -9,23 +9,29 @@ addprocs(SlurmManager())
 
 @everywhere n = 50
 @everywhere l1 = 100
-@everywhere m = 100000
-# @everywhere ρs = [0:0.1:10; 11:1:19; 20:5:100]
-@everywhere ρs = 35:5.0:100
+@everywhere maxρ = 30
+@everywhere ρs = generate.makegrid(maxρ)
+@everywhere filenames = getfilename.("prob", "5_6_26", ρs)
 
-@everywhere filenames = string.("/scratch/users/jgottf/cocci/results/prob/run_5_6_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
 @everywhere collect = []
 @everywhere for i in filenames
 	push!(collect, load_object(i)[1])
 end
 
-@everywhere pseudo = estimate.getpseudo(ρs, collect, n)
+@everywhere pseudo = estimate.getpseudo(collect, n)
+
+@everywhere dt = 0.01
+@everywhere maxtime = 4
+@everywhere times = 0:dt:maxtime
+@everywhere growth = -2
+@everywhere covariate = generate.buildcov(dt, maxtime, growth)
 
 @everywhere J = 1000
 @everywhere θ = 10
 
 pmap(ρs) do ρ
 	# θ = iszero(ρ) ? 0.1 : ρ
-	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ, θ, J)
-	save_object(string("/scratch/users/jgottf/cocci/results/data/run_5_6_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [ρhat, (ρ, θ, J)])
+	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ[1], ρ[2], covariate, dt, θ, J)
+	save_object(generate.getfilename("data", "5_6_26", ρ), 
+	[ρhat, (n, ρ[1], ρ[2], θ, J, dt, maxtime, growth)])
 end

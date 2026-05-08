@@ -4,8 +4,10 @@ using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
 import StatsBase
 import Distributions
 
-# include("estimate.jl")
-include("/scratch/users/jgottf/cocci/estimate.jl")
+if isfile("/scratch/users/jgottf/cocci/estimate.jl")
+    include("/scratch/users/jgottf/cocci/estimate.jl")
+else include("estimate.jl")
+end
 
 initialize = function(n, l1)
     intervalsn = [[] for _ in 1:l1]
@@ -57,20 +59,27 @@ expand = function(intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, tim
     (newintervalsn, newleavesn, newancestor, newtimen, newintervalsb, newleavesb, newtimeb, 2l1)
 end
 
-simulator = function(n, l1, ρ)
+simulator = function(n, l1, ρ0, ρ1, covariate, dt)
     intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, timeb = initialize(n, l1)
     
     numbern = n
     numberb = 0
-    time = 0
+    time = 0.0
+    next = 0.0
     K = n
+
     while K > 1
         # println(K)
 
-        λ = (K * (K - 1 + ρ)) / 2
-        time -= log(1 - rand()) / λ
-        
-        if rand() > ρ / (K - 1 + ρ)
+        λ = 0.5K * (K - 1 + ρ0)
+        comparison = false
+        while !comparison
+            next = time - log(1 - rand()) / λ
+            comparison = rand() <= estimate.targetf(K, ρ0, ρ1, next, covariate, dt, time) / (estimate.M(λ, K, ρ1, covariate, dt, time) * λ * exp(-λ * next))
+        end
+        time = next
+
+        if rand() < (K - 1) / (K - 1 + ρ0 + ρ1 * estimate.getvalue(covariate, dt, time))
             chosen = StatsBase.sample((1:l1)[ancestor], 2, replace = false)
             ancestor[chosen] .= 0
             numbern += 1
@@ -231,8 +240,8 @@ simulator = function(n, l1, ρ)
     (intervalsb, leavesb, timeb, numberb)
 end
 
-generatemut = function(n, l1, ρ, θ)
-    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ)
+generatemut = function(n, l1, ρ0, ρ1, covariate, dt, θ)
+    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, dt)
 
     mutants = [[] for _ in 1:n]
     allmutations = []
@@ -269,8 +278,8 @@ getconfig = function(input)
     push!(config, sum(input[1, :] .& input[2, :]))
 end
 
-getconfigs = function(n, l1, ρ, θ)
-    contains, allmutations = generatemut(n, l1, ρ, θ)
+getconfigs = function(n, l1, ρ0, ρ1, covariate, dt, θ)
+    contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, dt, θ)
 
     loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
     subset = contains[loci, :]
@@ -290,19 +299,50 @@ getconfigs = function(n, l1, ρ, θ)
     (configs, dists)
 end
 
-repeated = function(ρs, collect, pseudo, n, l1, ρ, θ, J)
-    ρhat = zeros(Float64, J)
+repeated = function(ρs, collect, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
+    ρhat = zeros(Float64, J, 2)
     for j in 1:J
         println("sample $(j)")
-        configs, dists = generate.getconfigs(n, l1, ρ, θ)
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         while length(configs) == 0 
-            configs, dists = generate.getconfigs(n, l1, ρ, θ) 
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         end
         loglik = estimate.getl(ρs, n, collect, configs, dists, pseudo)
-        ρhat[j] = ρs[argmax(loglik)]
+        ρhat[j, :] = ρs[argmax(loglik)]
     end
     
     ρhat
+end
+
+buildcov = function(dt, maxtime, growth)
+    times = 0:dt:maxtime
+    N = exp.(growth * times)
+    N = N ./ maximum(N)
+    [times N]
+end
+
+makegrid = function(maxρ)
+    ρ0 = [0:0.1:5; 6:1:14; 15:5:maxρ]
+    ρ1 = [0:0.1:5; 6:1:14; 15:5:maxρ]
+    ρs = []
+    for a in ρ0, b in ρ1
+	    if a + b <= maxρ push!(ρs, [a; b]) end
+    end
+    ρs
+end
+
+getfilename = function(type, date, ρ)
+	string(
+			"/scratch/users/jgottf/cocci/results/",
+			type,
+			"/run_",
+			date,
+			"/rho0_", 
+			replace(string(ρ[1]), "." => "-"), 
+			"_rho1_",
+			replace(string(ρ[2]), "." => "-"), 
+			".jld2"
+		)
 end
 
 end

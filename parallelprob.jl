@@ -10,9 +10,17 @@ addprocs(SlurmManager())
 @everywhere n = 50
 @everywhere l1 = 100
 @everywhere m = 100000
-@everywhere ρs = [0:0.1:10; 11:1:19; 20:5:100]
+@everywhere maxρ = 30
+@everywhere ρs = generate.makegrid(maxρ)
+
+@everywhere dt = 0.01
+@everywhere maxtime = 4
+@everywhere times = 0:dt:maxtime
+@everywhere growth = -2
+@everywhere covariate = generate.buildcov(dt, maxtime, growth)
 
 pmap(ρs) do ρ
-	results = estimate.montecarlo(n, l1, ρ, m)
-	save_object(string("/scratch/users/jgottf/cocci/results/prob/run_5_6_26/results_", replace(string(ρ), "." => "_"), ".jld2"), [results, (n, l1, m, ρ)])
+	results = estimate.montecarlo(n, l1, ρ[1], ρ[2], covariate, dt, m)
+	save_object(generate.getfilename("prob", "5_6_26", ρ), 
+		[results, (n, m, ρ[1], ρ[2], dt, maxtime, growth)])
 end
