@@ -47,4 +47,4 @@ genotypes <- genotypes %>%
 
 genotypes <- na.omit(genotypes)
 
-write_csv(genotypes,"immitis_data.df")
+write_csv(genotypes,"immitis_data.csv")
