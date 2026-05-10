@@ -48,3 +48,10 @@ genotypes <- genotypes %>%
 genotypes <- na.omit(genotypes)
 
 write_csv(genotypes,"immitis_data.csv")
+
+len <- genotypes %>% filter(Chromosome == "NW_004504310.1") %>% pull(Position) %>% range %>% diff
+len <- len%/%10
+
+sampling <- genotypes %>% filter(Chromosome == "NW_004504310.1") %>% 
+    filter(Position > min(Position) & Position < min(Position)+len) %>% 
+    nrow
