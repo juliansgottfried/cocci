@@ -44,3 +44,5 @@ genotypes <- genotypes %>%
     add_column(.before = "Major", Position = variants$POS)
 
 genotypes <- na.omit(genotypes)
+
+                
