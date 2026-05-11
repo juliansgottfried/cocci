@@ -193,7 +193,53 @@ getsum = function(allconfigs, n, pseudo)
     summer
 end
 
-getl = function(ρs, n, results, configs, dists, pseudo)
+orderconfigs = function(configs, dists)
+	configs = sort(configs[:, 1:2], dims = 2, rev = true)
+	pairedconfigs = [configs dists]
+	sortedpairedconfigs = sortslices(pairedconfigs, dims = 1, by = x -> (x[1], x[2], x[3]), rev = false)
+	sortedconfigs = Int.(sortedpairedconfigs[:, 1:3])
+	sorteddists = sortedpairedconfigs[:, 4]
+	(sortedconfigs, sorteddists)
+end
+
+getstore = function(collect, nρ, config, pseudo)
+	store = zeros(Float64, nρ, nρ)
+	for i in 1:nρ, j in 1:nρ
+		extract = collect[i, j][config[1], config[2]]
+		store[i, j] = extract[2][extract[1] .== config[3]][1]
+	end
+	store .+= pseudo
+	if config[1] != config[2] store .*= 2 end
+	store
+end
+
+getl = function(n, collect, dρ, nρ, configs, dists, pseudo)
+    loglik = zeros(Float64, nρ, nρ)
+    denom = zeros(Float64, nρ, nρ)
+    for i in 1:nρ, j in 1:nρ denom[i, j] = getsum(collect[i, j], n, pseudo) end
+    
+    sortedconfigs, sorteddists = orderconfigs(configs, dists)
+
+    currentconfig = [0; 0; 0]
+    store = zeros(Float64, nρ, nρ)
+    for i in 1:size(sortedconfig)[1]
+        # println(i)
+        tmpconfig = sortedconfigs[i, :]
+        if tmpconfig != currentconfig
+            currentconfig = tmpconfig
+            store = getstore(collect, nρ, currentconfig, pseudo)
+        end
+
+        relocate = Int.(div.((0:dρ:(dρ * (nρ - 1))) .* sorteddists[i], dρ)) .+ 1
+        for i in 1:nρ, j in 1:nρ
+            loglik[i, j] +=  log(store[relocate[i], relocate[j]] ./ denom[relocate[i], relocate[j]])
+        end
+    end
+
+    loglik
+end
+
+#= getl = function(ρs, n, results, configs, dists, pseudo)
     # ρs = []
     # for i in 1:10 push!(ρs, [0.0; i/10]) end
     l = length(ρs)
@@ -201,6 +247,7 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     denom = zeros(Float64, l)
     for i in 1:l denom[i] = getsum(results[i], n, pseudo) end
     for i in 1:l
+        printlnln(i)
         for j in 1:size(configs)[1]
             config1 = maximum(configs[j, 1:2])
             config2 = minimum(configs[j, 1:2])
@@ -219,7 +266,7 @@ getl = function(ρs, n, results, configs, dists, pseudo)
     end
 
     loglik
-end
+end =#
 
 getpseudo = function(collect, n)
     pseudo = Inf

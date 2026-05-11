@@ -299,7 +299,7 @@ getconfigs = function(n, l1, ρ0, ρ1, covariate, dt, θ)
     (configs, dists)
 end
 
-repeated = function(ρs, collect, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
+repeated = function(collect, dρ, nρ, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
     ρhat = zeros(Float64, J, 2)
     for j in 1:J
         println("sample $(j)")
@@ -307,8 +307,11 @@ repeated = function(ρs, collect, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
         while length(configs) == 0 
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         end
-        loglik = estimate.getl(ρs, n, collect, configs, dists, pseudo)
-        ρhat[j, :] = ρs[argmax(loglik)]
+        loglik = estimate.getl(n, collect, dρ, nρ, configs, dists, pseudo)
+        idx = argmax(loglik)
+        ρ0 = dρ * (idx[1] - 1)
+	    ρ1 = dρ * (idx[2] - 1)
+        ρhat[j, :] = [ρ0; ρ1]
     end
     
     ρhat

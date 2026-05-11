@@ -17,8 +17,8 @@ addprocs(SlurmManager())
 getobj = function(dρ, idx1, idx2)
 	ρ0 = dρ * (idx1 - 1)
 	ρ1 = dρ * (idx2 - 1)
-	filename = generate.getfilenamelocal("prob", "5_8_26", ρ0, ρ1)
-	load_object(filename)[1]
+	filename = generate.getfilename("prob", "5_8_26", ρ0, ρ1)
+	load_object(filename)
 end
 
 collect = [getobj(dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
@@ -33,8 +33,14 @@ collect = [getobj(dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
 @everywhere J = 100
 @everywhere θ = 10
 
-pmap(ρs) do ρ
-	# θ = iszero(ρ[1] + ρ[2]) ? 0.1 : ρ[1] + ρ[2]
-	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ[1], ρ[2], covariate, dt, θ, J)
-	save_object(generate.getfilename("data", "5_8_26", ρ0, ρ1), [ρhat])
+pmap(1:nρ^2) do i
+	idx1 = div(i, nρ + 1) + 1
+	idx2 = i - nρ * (idx1 - 1)
+	ρ0 = dρ * (idx1 - 1)
+	ρ1 = dρ * (idx2 - 1)
+	# θ = iszero(ρ0 + ρ1) ? 0.1 : ρ0 + ρ1
+	ρhat = generate.repeated(collect, dρ, nρ, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
+	save_object(generate.getfilename("data", "5_11_26", ρ0, ρ1), ρhat)
 end
+
+argmax([1;2;;4;3])[2]

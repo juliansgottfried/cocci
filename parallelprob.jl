@@ -21,7 +21,7 @@ addprocs(SlurmManager())
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 pmap(1:nρ^2) do i
-	idx1 = div(i, nρ + 1) + 1
+	idx1 = div(i - 1, nρ) + 1
 	idx2 = i - nρ * (idx1 - 1)
 	ρ0 = dρ * (idx1 - 1)
 	ρ1 = dρ * (idx2 - 1)
