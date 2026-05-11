@@ -1,7 +1,7 @@
 library(tidyverse)
 
 setwd("~/Desktop/cocci")
-variants <- read.table("variants.txt", sep = '\t', header = T)
+variants <- read.table("genomic_data/california_variants.txt", sep = '\t', header = T)
 
 n <- length(grep("Sample",colnames(variants)))
 
@@ -47,7 +47,7 @@ genotypes <- genotypes %>%
 
 genotypes <- na.omit(genotypes)
 
-write_csv(genotypes,"immitis_data.csv")
+write_csv(genotypes,"genomic_data/california_data.csv")
 
 len <- genotypes %>% filter(Chromosome == "NW_004504310.1") %>% pull(Position) %>% range %>% diff
 len <- len%/%10
