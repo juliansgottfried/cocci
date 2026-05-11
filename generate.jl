@@ -316,13 +316,13 @@ end
 
 buildcov = function(dt, maxtime, change)
     times = 0:dt:maxtime
-    growth = log(change) / maxtime
+    growth = sign(change) * log(abs(change)) / maxtime
     N = exp.(growth * times)
     N = N ./ maximum(N)
     [times N]
 end
 
-makegrid = function(maxρ)
+#= makegrid = function(maxρ)
     ρ0 = [0:0.1:5; 6:1:14; 15:5:maxρ]
     ρ1 = [0:0.1:5; 6:1:14; 15:5:maxρ]
     ρs = []
@@ -330,32 +330,32 @@ makegrid = function(maxρ)
 	    if a + b <= maxρ push!(ρs, [a; b]) end
     end
     ρs
-end
+end =#
 
-getfilenamelocal = function(type, date, ρ)
+getfilenamelocal = function(type, date, ρ0, ρ1)
 	string(
 			"results/",
 			type,
 			"/run_",
 			date,
 			"/rho0_", 
-			replace(string(ρ[1]), "." => "-"), 
+			replace(string(ρ0), "." => "-"), 
 			"_rho1_",
-			replace(string(ρ[2]), "." => "-"), 
+			replace(string(ρ1), "." => "-"), 
 			".jld2"
 		)
 end
 
-getfilename = function(type, date, ρ)
+getfilename = function(type, date, ρ0, ρ1)
 	string(
 			"/scratch/users/jgottf/cocci/results/",
 			type,
 			"/run_",
 			date,
 			"/rho0_", 
-			replace(string(ρ[1]), "." => "-"), 
+			replace(string(ρ0), "." => "-"), 
 			"_rho1_",
-			replace(string(ρ[2]), "." => "-"), 
+			replace(string(ρ1), "." => "-"), 
 			".jld2"
 		)
 end
