@@ -26,11 +26,11 @@ end
 @everywhere growth = -2
 @everywhere covariate = generate.buildcov(dt, maxtime, growth)
 
-@everywhere J = 1000
-@everywhere θ = 5
+@everywhere J = 100
+@everywhere θ = 10
 
 pmap(ρs) do ρ
-	# θ = iszero(ρ) ? 0.1 : ρ
+	# θ = iszero(ρ[1] + ρ[2]) ? 0.1 : ρ[1] + ρ[2]
 	ρhat = generate.repeated(ρs, collect, pseudo, n, l1, ρ[1], ρ[2], covariate, dt, θ, J)
 	save_object(generate.getfilename("data", "5_8_26", ρ), [ρhat])
 end
