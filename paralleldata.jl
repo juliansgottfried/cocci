@@ -21,10 +21,9 @@ end
 @everywhere pseudo = estimate.getpseudo(collect, n)
 
 @everywhere dt = 0.01
-@everywhere maxtime = 4
-@everywhere times = 0:dt:maxtime
-@everywhere growth = -2
-@everywhere covariate = generate.buildcov(dt, maxtime, growth)
+@everywhere maxtime = 3
+@everywhere change = 20
+@everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 @everywhere J = 100
 @everywhere θ = 10

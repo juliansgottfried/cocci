@@ -14,10 +14,9 @@ addprocs(SlurmManager())
 @everywhere ρs = generate.makegrid(maxρ)
 
 @everywhere dt = 0.01
-@everywhere maxtime = 4
-@everywhere times = 0:dt:maxtime
-@everywhere growth = -2
-@everywhere covariate = generate.buildcov(dt, maxtime, growth)
+@everywhere maxtime = 3
+@everywhere change = 20
+@everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 pmap(ρs) do ρ
 	results = estimate.montecarlo(n, l1, ρ[1], ρ[2], covariate, dt, m)

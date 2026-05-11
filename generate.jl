@@ -314,8 +314,9 @@ repeated = function(ρs, collect, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
     ρhat
 end
 
-buildcov = function(dt, maxtime, growth)
+buildcov = function(dt, maxtime, change)
     times = 0:dt:maxtime
+    growth = log(change) / maxtime
     N = exp.(growth * times)
     N = N ./ maximum(N)
     [times N]
