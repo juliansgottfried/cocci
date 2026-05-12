@@ -1,6 +1,7 @@
 module generate
 
 using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
+using JLD2
 import StatsBase
 import Distributions
 
@@ -361,6 +362,13 @@ getfilename = function(type, date, ρ0, ρ1)
 			replace(string(ρ1), "." => "-"), 
 			".jld2"
 		)
+end
+
+getobj = function(type, date, dρ, idx1, idx2)
+	ρ0 = dρ * (idx1 - 1)
+	ρ1 = dρ * (idx2 - 1)
+	filename = getfilename(type, date, ρ0, ρ1)
+	load_object(filename)
 end
 
 end

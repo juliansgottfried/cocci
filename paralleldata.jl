@@ -14,14 +14,7 @@ addprocs(SlurmManager())
 @everywhere maxρ = 10
 @everywhere nρ = Int(div(maxρ, dρ)) + 1
 
-getobj = function(dρ, idx1, idx2)
-	ρ0 = dρ * (idx1 - 1)
-	ρ1 = dρ * (idx2 - 1)
-	filename = generate.getfilename("prob", "5_11_26", ρ0, ρ1)
-	load_object(filename)
-end
-
-collect = [getobj(dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
+@everywhere collect = [generate.getobj("prob", "5_11_26", dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
 
 @everywhere pseudo = estimate.getpseudo(collect, n)
 
