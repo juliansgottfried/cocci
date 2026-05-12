@@ -5,17 +5,16 @@ import Statistics
 include("estimate.jl")
 include("generate.jl")
 
-ρs = [0:0.1:10; 11:19; 20:5:100]
-# ρs = 0:0.1:15
-filenames = string.("/Users/juliangottfried/Desktop/cocci/results/data/run_5_6_26/results_", replace.(string.(ρs), "." => "_"), ".jld2")
-collect = []
-for i in filenames
-    push!(collect, load_object(i)[1])
-end
+dρ = 0.5
+maxρ = 10
+nρ = Int(div(maxρ, dρ)) + 1
+collect = [generate.getobjlocal("data", "5_11_26", dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
 
-plotter = zeros(Float64, length(ρs) - 1, 3)
-for i in eachindex(ρs)[2:end]
-    plotter[i - 1, :] = Statistics.quantile(log2.(collect[i] / ρs[i]), [0.055, 0.5, 0.945])
+plotter = zeros(Float64, nρ, nρ, 3)
+for i in 1:nρ, j in 1:nρ
+    ρ0 = dρ * (i - 1)
+	ρ1 = dρ * (j - 1)
+    plotter[i, j, :] = Statistics.quantile.(log2.(collect[i, j] .- [ρ0; ρ1]), [0.055, 0.5, 0.945])
 end
 plotter[plotter .== -Inf] .= minimum(plotter[plotter .!= -Inf])
 

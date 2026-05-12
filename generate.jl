@@ -371,4 +371,11 @@ getobj = function(type, date, dρ, idx1, idx2)
 	load_object(filename)
 end
 
+getobjlocal = function(type, date, dρ, idx1, idx2)
+	ρ0 = dρ * (idx1 - 1)
+	ρ1 = dρ * (idx2 - 1)
+	filename = getfilenamelocal(type, date, ρ0, ρ1)
+	load_object(filename)
+end
+
 end

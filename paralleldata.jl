@@ -32,6 +32,9 @@ pmap(1:nρ^2) do i
 	ρ0 = dρ * (idx1 - 1)
 	ρ1 = dρ * (idx2 - 1)
 	# θ = iszero(ρ0 + ρ1) ? 0.1 : ρ0 + ρ1
-	ρhat = generate.repeated(collect, dρ, nρ, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
-	save_object(generate.getfilename("data", "5_11_26", ρ0, ρ1), ρhat)
+	filename = generate.getfilename("data", "5_11_26", ρ0, ρ1)
+	if !isfile(filename)
+		ρhat = generate.repeated(collect, dρ, nρ, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
+		save_object(filename, ρhat)
+	end
 end
