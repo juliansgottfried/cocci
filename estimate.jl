@@ -194,7 +194,7 @@ getsum = function(allconfigs, n, pseudo)
 end
 
 orderconfigs = function(configs, dists)
-	configs = sort(configs[:, 1:2], dims = 2, rev = true)
+	configs = [sort(configs[:, 1:2], dims = 2, rev = true) configs[:, 3]]
 	pairedconfigs = [configs dists]
 	sortedpairedconfigs = sortslices(pairedconfigs, dims = 1, by = x -> (x[1], x[2], x[3]), rev = false)
 	sortedconfigs = Int.(sortedpairedconfigs[:, 1:3])
@@ -222,7 +222,7 @@ getl = function(n, collect, dρ, nρ, configs, dists, pseudo)
 
     currentconfig = [0; 0; 0]
     store = zeros(Float64, nρ, nρ)
-    for i in 1:size(sortedconfig)[1]
+    for i in 1:size(sortedconfigs)[1]
         # println(i)
         tmpconfig = sortedconfigs[i, :]
         if tmpconfig != currentconfig

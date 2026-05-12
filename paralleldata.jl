@@ -30,7 +30,7 @@ collect = [getobj(dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
 @everywhere change = 15
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
-@everywhere J = 100
+@everywhere J = 1000
 @everywhere θ = 10
 
 pmap(1:nρ^2) do i
