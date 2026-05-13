@@ -5,6 +5,8 @@ variants <- read.table("genomic_data/california_variants.txt", sep = '\t', heade
 
 n <- length(grep("Sample",colnames(variants)))
 
+# variants <- variants %>% filter(CHROM != "NW_027094050.1")
+
 homozygotes <- as.numeric(sapply(str_split(sapply(str_split(variants$INFO,";"),\(x) x[3]),"="),\(x) x[2]))==0
 variants <- variants[homozygotes,]
 
@@ -14,17 +16,17 @@ variants <- variants[called,]
 polymorphic <- as.numeric(sapply(str_split(sapply(str_split(variants$INFO,";"),\(x) x[4]),"="),\(x) x[2]))!=n
 variants <- variants[polymorphic,]
 
-variants <- variants %>% arrange(CHROM, POS)
-keep <- rep(F, nrow(variants))
-prev_idx <- 1
-keep[1] <- T
-for (i in 2:nrow(variants)) {
-    if (abs(variants$POS[i] - variants$POS[prev_idx]) >= 100) {
-        prev_idx <- i
-        keep[i] <- T
-    }
-}
-variants <- variants[keep, ]
+# variants <- variants %>% arrange(CHROM, POS)
+# keep <- rep(F, nrow(variants))
+# prev_idx <- 1
+# keep[1] <- T
+# for (i in 2:nrow(variants)) {
+#     if (abs(variants$POS[i] - variants$POS[prev_idx]) >= 100) {
+#         prev_idx <- i
+#         keep[i] <- T
+#     }
+# }
+# variants <- variants[keep, ]
 
 genotypes <- data.frame(apply(variants %>% select(starts_with("Sample")), 2, function(x) {
     as.numeric(sapply(str_split(sapply(str_split(x, ":"), \(x) x[1]), "/"), \(x) x[1]))
@@ -49,9 +51,19 @@ genotypes <- na.omit(genotypes)
 
 write_csv(genotypes,"genomic_data/california_data.csv")
 
-len <- genotypes %>% filter(Chromosome == "NW_004504310.1") %>% pull(Position) %>% range %>% diff
-len <- len%/%10
+# get whole sample sequences
+paste0(with(genotypes,ifelse(Sample7,Minor,Major)),collapse="")
 
-sampling <- genotypes %>% filter(Chromosome == "NW_004504310.1") %>% 
-    filter(Position > min(Position) & Position < min(Position)+len) %>% 
-    nrow
+
+# get constant sites
+chroms <- unique(genotypes$Chromosome)
+getconst <- function(i) {
+    snps <- c("A"=0,"C"=0,"G"=0,"T"=0)
+    name <- paste0("genomic_data/venezuela_chrom",i,".txt")
+    chrom <- paste0(read.table(name)$V1,collapse="")
+    tmpsnps <- genotypes$Major[genotypes$Chromosome == chroms[i]] %>% table
+    snps[names(snps) %in% names(tmpsnps)] = tmpsnps
+    str_count(chrom, names(snps)) - snps
+}
+apply(sapply(1:8, getconst), 1, sum)
+
