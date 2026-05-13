@@ -338,11 +338,11 @@ getfilename = function(type, date, isρ0, ρ)
 		)
 end
 
-getobj = function(type, date, dρ, idx1, idx2)
+#= getobj = function(type, date, dρ, idx1, idx2)
 	ρ0 = dρ * (idx1 - 1)
 	ρ1 = dρ * (idx2 - 1)
 	filename = getfilename(type, date, ρ0, ρ1)
 	load_object(filename)
-end
+end =#
 
 end

@@ -25,5 +25,5 @@ pmap(1:2nρ) do i
 	isρ0 = i <= nρ
 	if isρ0 results = estimate.montecarlo(n, l1, m, ρ, 0.0, covariate, dt)
 	else results = estimate.montecarlo(n, l1, m, 0.0, ρ, covariate, dt) end
-	save_object(generate.getfilename("prob", "5_13_26", isρ0, ρ), results0)
+	save_object(generate.getfilename("prob", "5_13_26", isρ0, ρ), results)
 end
