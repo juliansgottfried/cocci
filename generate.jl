@@ -300,19 +300,25 @@ getconfigs = function(n, l1, ρ0, ρ1, covariate, dt, θ)
     (configs, dists)
 end
 
-repeated = function(collect, dρ, nρ, pseudo, n, l1, ρ0, ρ1, covariate, dt, θ, J)
-    ρhat = zeros(Float64, J, 2)
+repeated = function(collect0, collect1, pseudo0, pseudo1,
+			n, l1, θ, J, dρ, nρ,
+			ρ0, ρ1, covariate, dt)
+    ρhat = zeros(Float64, J, 4)
     for j in 1:J
         println("sample $(j)")
         configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         while length(configs) == 0 
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         end
-        loglik = estimate.getl(n, collect, dρ, nρ, configs, dists, pseudo)
-        idx = argmax(loglik)
-        ρ0 = dρ * (idx[1] - 1)
-	    ρ1 = dρ * (idx[2] - 1)
-        ρhat[j, :] = [ρ0; ρ1]
+        loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
+            dρ, nρ, configs, dists)
+        idx0 = argmax(loglik0)
+        idx1 = argmax(loglik1)
+        lik0 = maximum(loglik0)
+        lik1 = maximum(loglik1)
+        ρ0 = dρ * (idx0 - 1)
+	    ρ1 = dρ * (idx1 - 1)
+        ρhat[j, :] = [ρ0; lik0; ρ1; lik1]
     end
     
     ρhat
@@ -338,11 +344,15 @@ getfilename = function(type, date, isρ0, ρ)
 		)
 end
 
-#= getobj = function(type, date, dρ, idx1, idx2)
-	ρ0 = dρ * (idx1 - 1)
-	ρ1 = dρ * (idx2 - 1)
-	filename = getfilename(type, date, ρ0, ρ1)
-	load_object(filename)
-end =#
+getfilenamelocal = function(type, date, isρ0, ρ)
+	string( 
+            type,
+			"/run_",
+			date,
+            isρ0 ? "/rho0/rho_" : "/rho1/rho_",
+			replace(string(ρ), "." => "-"), 
+			".jld2"
+		)
+end
 
 end

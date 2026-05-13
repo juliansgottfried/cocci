@@ -203,25 +203,24 @@ orderconfigs = function(configs, dists)
 end
 
 getstore = function(collect, nρ, config, pseudo)
-	store = zeros(Float64, nρ, nρ)
-	for i in 1:nρ, j in 1:nρ
-		extract = collect[i, j][config[1], config[2]]
-		store[i, j] = extract[2][extract[1] .== config[3]][1]
+	store = zeros(Float64, nρ)
+	for i in 1:nρ
+		extract = collect[i][config[1], config[2]]
+		store[i] = extract[2][extract[1] .== config[3]][1]
 	end
 	store .+= pseudo
 	if config[1] != config[2] store .*= 2 end
 	store
 end
 
-getl = function(n, collect, dρ, nρ, configs, dists, pseudo)
-    loglik = zeros(Float64, nρ, nρ)
-    denom = zeros(Float64, nρ, nρ)
-    for i in 1:nρ, j in 1:nρ denom[i, j] = getsum(collect[i, j], n, pseudo) end
+getlsubtask = function(n, collect, pseudo, dρ, nρ, configs, dists)
+    loglik = zeros(Float64, nρ)
+    denom = getsum.(collect, n, pseudo)
     
     sortedconfigs, sorteddists = orderconfigs(configs, dists)
 
     currentconfig = [0; 0; 0]
-    store = zeros(Float64, nρ, nρ)
+    store = zeros(Float64, nρ)
     for i in 1:size(sortedconfigs)[1]
         # println(i)
         tmpconfig = sortedconfigs[i, :]
@@ -231,12 +230,17 @@ getl = function(n, collect, dρ, nρ, configs, dists, pseudo)
         end
 
         relocate = Int.(div.((0:dρ:(dρ * (nρ - 1))) .* sorteddists[i], dρ)) .+ 1
-        for i in 1:nρ, j in 1:nρ
-            loglik[i, j] +=  log(store[relocate[i], relocate[j]] ./ denom[relocate[i], relocate[j]])
-        end
+        loglik .+=  log.(store[relocate] ./ denom[relocate])
     end
 
     loglik
+end
+
+getl = function(n, collect0, collect1, pseudo0, pseudo1,
+            dρ, nρ, configs, dists)
+    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, nρ, configs, dists)
+    loglik1 = getlsubtask(n, collect1, pseudo1, dρ, nρ, configs, dists)
+    (loglik0, loglik1)
 end
 
 #= getl = function(ρs, n, results, configs, dists, pseudo)
