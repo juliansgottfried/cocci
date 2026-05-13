@@ -13,18 +13,17 @@ addprocs(SlurmManager())
 
 @everywhere dρ = 0.1
 @everywhere maxρ = 10
-# @everywhere nρ = floor(Int, maxρ / dρ) + 1
+@everywhere nρ = floor(Int, maxρ / dρ) + 1
 
 @everywhere dt = 0.01
 @everywhere maxtime = 3
 @everywhere change = 20
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
-pmap(0:dρ:maxρ) do ρ
-	# idx1 = div(i - 1, nρ) + 1
-	# idx2 = i - nρ * (idx1 - 1)
-	results0 = estimate.montecarlo(n, l1, m, ρ, 0.0, covariate, dt)
-	results1 = estimate.montecarlo(n, l1, m, 0.0, ρ, covariate, dt)
-	save_object(generate.getfilename("prob", "5_13_26", true, ρ), results0)
-	save_object(generate.getfilename("prob", "5_13_26", false, ρ), results1)
+pmap(1:2nρ) do i
+	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
+	isρ0 = i <= nρ
+	if isρ0 results = estimate.montecarlo(n, l1, m, ρ, 0.0, covariate, dt)
+	else results = estimate.montecarlo(n, l1, m, 0.0, ρ, covariate, dt) end
+	save_object(generate.getfilename("prob", "5_13_26", isρ0, ρ), results0)
 end
