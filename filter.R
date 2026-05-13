@@ -67,3 +67,20 @@ getconst <- function(i) {
 }
 apply(sapply(1:8, getconst), 1, sum)
 
+
+# estimate Ne
+mu_bp <- 10^(-10)
+L <- 28.9 * 10^6
+mu <- mu_bp*L
+Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
+Ne <- 10^7
+
+# estimate gen time in years
+tmrca <- 2.85*10^(-5)
+low <- 1500
+high <- 5500
+g_low = low * mu_bp / tmrca
+g_high = high * mu_bp / tmrca
+g <- 10^(-2)
+
+scaling <- Ne*g

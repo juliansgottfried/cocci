@@ -169,11 +169,11 @@ sumallconfigs! = function(allconfigs, add, n, m)
     end
 end
 
-montecarlo = function(n, l1, ρ0, ρ1, covariate, dt, m)
+montecarlo = function(n, l1, m, ρ0, ρ1, covariate, dt)
     allconfigs = [buildallconfigs(i, j, n) for i = 1:(n - 1), j = 1:(n - 1)]
 
     for i in 1:m
-        mod(i,1000) == 0 && println("Iteration ", i)
+        mod(i, 1000) == 0 && println("Iteration ", i)
         leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, dt)
         add = configloop(allconfigs, n, leavesb, timeb, numberb)
         sumallconfigs!(allconfigs, add, n, m)

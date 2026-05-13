@@ -8,7 +8,23 @@ include("generate.jl")
 dρ = 0.5
 maxρ = 10
 nρ = Int(div(maxρ, dρ)) + 1
-collect = [generate.getobjlocal("data", "5_11_26", dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
+# collect = [generate.getobjlocal("data", "5_11_26", dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
+
+collect = [generate.getobjlocal("prob", "5_11_26", dρ, idx1, idx2) for idx1 in 1:nρ, idx2 in 1:nρ]
+
+collect[1, :]
+
+idx1 = 20
+idx2 = 20
+ρ0 = dρ * (idx1 - 1)
+ρ1 = dρ * (idx2 - 1)
+histogram(collect[idx1, idx2][:, 1], bins = 20,
+    color = :white, fill = :grey, label = false)
+histogram(collect[idx1, idx2][:, 2], bins = 20,
+    color = :white, fill = :grey, label = false)
+
+Statistics.quantile(collect[idx1, idx2][:, 1], [0.1, 0.5, 0.9])
+Statistics.quantile(collect[idx1, idx2][:, 2], [0.1, 0.5, 0.9])
 
 plotter = zeros(Float64, nρ, nρ, 3)
 for i in 1:nρ, j in 1:nρ

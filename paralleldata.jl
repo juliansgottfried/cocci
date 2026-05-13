@@ -10,7 +10,7 @@ addprocs(SlurmManager())
 @everywhere n = 17
 @everywhere l1 = 50
 
-@everywhere dρ = 0.5
+@everywhere dρ = 0.1
 @everywhere maxρ = 10
 @everywhere nρ = Int(div(maxρ, dρ)) + 1
 

@@ -326,40 +326,14 @@ buildcov = function(dt, maxtime, change)
     [times N]
 end
 
-#= makegrid = function(maxρ)
-    ρ0 = [0:0.1:5; 6:1:14; 15:5:maxρ]
-    ρ1 = [0:0.1:5; 6:1:14; 15:5:maxρ]
-    ρs = []
-    for a in ρ0, b in ρ1
-	    if a + b <= maxρ push!(ρs, [a; b]) end
-    end
-    ρs
-end =#
-
-getfilenamelocal = function(type, date, ρ0, ρ1)
+getfilename = function(type, date, isρ0, ρ)
 	string(
-			"results/",
+			"/scratch/users/jgottf/cocci/",
 			type,
 			"/run_",
 			date,
-			"/rho0_", 
-			replace(string(ρ0), "." => "-"), 
-			"_rho1_",
-			replace(string(ρ1), "." => "-"), 
-			".jld2"
-		)
-end
-
-getfilename = function(type, date, ρ0, ρ1)
-	string(
-			"/scratch/users/jgottf/cocci/results/",
-			type,
-			"/run_",
-			date,
-			"/rho0_", 
-			replace(string(ρ0), "." => "-"), 
-			"_rho1_",
-			replace(string(ρ1), "." => "-"), 
+            isρ0 ? "/rho0/rho_" : "/rho1/rho_",
+			replace(string(ρ), "." => "-"), 
 			".jld2"
 		)
 end
@@ -368,13 +342,6 @@ getobj = function(type, date, dρ, idx1, idx2)
 	ρ0 = dρ * (idx1 - 1)
 	ρ1 = dρ * (idx2 - 1)
 	filename = getfilename(type, date, ρ0, ρ1)
-	load_object(filename)
-end
-
-getobjlocal = function(type, date, dρ, idx1, idx2)
-	ρ0 = dρ * (idx1 - 1)
-	ρ1 = dρ * (idx2 - 1)
-	filename = getfilenamelocal(type, date, ρ0, ρ1)
 	load_object(filename)
 end
 
