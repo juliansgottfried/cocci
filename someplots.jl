@@ -7,23 +7,32 @@ include("generate.jl")
 
 dρ = 0.1
 maxρ = 10
-nρ = Int(div(maxρ, dρ)) + 1
+nρ = nρ = floor(Int, maxρ / dρ) + 1
 
 data0 = [load_object(generate.getfilenamelocal("data", "5_13_26", true, ρ)) for ρ in 0:dρ:maxρ]
 data1 = [load_object(generate.getfilenamelocal("data", "5_13_26", false, ρ)) for ρ in 0:dρ:maxρ]
 
+ρs = 0:dρ:maxρ
+
 aic = zeros(Float64, nρ, 2, 3)
 ratio = zeros(Float64, nρ, 4, 3)
 for i in 1:nρ
-    aic[i, 1, :] = Statistics.quantile.(data0[i][:, 2] - data0[i][:, 4], 
+    # i = 1
+    aic[i, 1, :] = Statistics.quantile(data0[i][:, 2] - data0[i][:, 4], 
         [0.055, 0.5, 0.945])
-    aic[i, 2, :] = Statistics.quantile.(data1[i][:, 4] - data1[i][:, 2], 
+    aic[i, 2, :] = Statistics.quantile(data1[i][:, 4] - data1[i][:, 2], 
         [0.055, 0.5, 0.945])
-    ρ = 0:dρ:maxρ
-    ratio[i, 1, :] = Statistics.quantile.(data0[i][:, 1] ./ ρ[i], [0.055, 0.5, 0.945])
-    ratio[i, 2, :] = Statistics.quantile.(data0[i][:, 3] ./ ρ[i], [0.055, 0.5, 0.945])
-    ratio[i, 3, :] = Statistics.quantile.(data1[i][:, 1] ./ ρ[i], [0.055, 0.5, 0.945])
-    ratio[i, 4, :] = Statistics.quantile.(data1[i][:, 3] ./ ρ[i], [0.055, 0.5, 0.945])
+    if ρ[i] == 0 
+        ratio[i, 1, :] = [Inf; Inf; Inf]
+        ratio[i, 2, :] = [Inf; Inf; Inf]
+        ratio[i, 3, :] = [Inf; Inf; Inf]
+        ratio[i, 4, :] = [Inf; Inf; Inf]
+    else
+        ratio[i, 1, :] = Statistics.quantile(log2.(data0[i][:, 1] ./ ρs[i]), [0.055, 0.5, 0.945])
+        ratio[i, 2, :] = Statistics.quantile(log2.(data0[i][:, 3] ./ ρs[i]), [0.055, 0.5, 0.945])
+        ratio[i, 3, :] = Statistics.quantile(log2.(data1[i][:, 1] ./ ρs[i]), [0.055, 0.5, 0.945])
+        ratio[i, 4, :] = Statistics.quantile(log2.(data1[i][:, 3] ./ ρs[i]), [0.055, 0.5, 0.945])
+    end
 end
 ratio[ratio .== -Inf] .= minimum(ratio[ratio .!= -Inf])
 ratio[ratio .== Inf] .= maximum(ratio[ratio .!= Inf])
@@ -43,18 +52,18 @@ ratioplot = function(i, j)
     part1 = i == 1 ? "constant data" : "varying data"
     part2 = j == 1 ? "constant model" : "varying model"
     plot(ρs, ratio[:, k, 1], fillrange = ratio[:, k, 3], 
-        xlabel = "recombination rate ρ", ylabel = "relative error",
+        xlabel = "recombination rate ρ", ylabel = "log2 relative error",
         title = "$part1, $part2",
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
         linecolor = false, label = false, grid = false)
-    hline!([1], c = :red, alpha = 0.7, label = false)
+    hline!([0], c = :red, alpha = 0.7, label = false)
     plot!(ρs, ratio[:, k, 2], c = :black, linewidth = 1.2, label = false)
 end
 
 aicplot(1)
 aicplot(2)
 
-ratioplot(1)
-ratioplot(2)
-ratioplot(3)
-ratioplot(4)
+ratioplot(1, 1)
+ratioplot(1, 2)
+ratioplot(2, 1)
+ratioplot(2, 2)

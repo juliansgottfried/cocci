@@ -17,7 +17,7 @@ addprocs(SlurmManager())
 
 @everywhere dt = 0.01
 @everywhere maxtime = 3
-@everywhere change = 20
+@everywhere change = -10
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 pmap(1:2nρ) do i
