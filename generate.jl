@@ -306,6 +306,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
     ρhat = zeros(Float64, J, 4)
     for j in 1:J
         println("sample $(j)")
+        flush(stdout)
         configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
         while length(configs) == 0 
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
