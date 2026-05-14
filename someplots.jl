@@ -66,3 +66,11 @@ ratioplot(1, 1)
 ratioplot(1, 2)
 ratioplot(2, 1)
 ratioplot(2, 2)
+
+
+
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_14_26", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_14_26", false, ρ)) for ρ in 0:dρ:maxρ]
+
+collect0[100]
+collect1[100]
