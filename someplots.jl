@@ -9,8 +9,8 @@ dρ = 0.1
 maxρ = 10
 nρ = floor(Int, maxρ / dρ) + 1
 
-data0 = [load_object(generate.getfilenamelocal("data", "5_14_26", true, ρ)) for ρ in 0:dρ:maxρ]
-data1 = [load_object(generate.getfilenamelocal("data", "5_14_26", false, ρ)) for ρ in 0:dρ:maxρ]
+data0 = [load_object(generate.getfilenamelocal("data", "5_15_26", true, ρ)) for ρ in 0:dρ:maxρ]
+data1 = [load_object(generate.getfilenamelocal("data", "5_15_26", false, ρ)) for ρ in 0:dρ:maxρ]
 
 ρs = 0:dρ:maxρ
 
@@ -21,7 +21,7 @@ for i in 1:nρ
     # i = 1
     aic[i, 1, :] = Statistics.quantile(data0[i][:, 2] - data0[i][:, 4], qs)
     aic[i, 2, :] = Statistics.quantile(data1[i][:, 4] - data1[i][:, 2], qs)
-    if ρ[i] == 0 
+    if ρs[i] == 0 
         ratio[i, 1, :] = [Inf; Inf; Inf]
         ratio[i, 2, :] = [Inf; Inf; Inf]
         ratio[i, 3, :] = [Inf; Inf; Inf]
@@ -56,6 +56,7 @@ ratioplot = function(i, j)
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
         linecolor = false, label = false, grid = false)
     hline!([0], c = :red, alpha = 0.7, label = false)
+    plot!(ρs, log2.(maxρ ./ ρs), color = :red, label = false)
     plot!(ρs, ratio[:, k, 2], c = :black, linewidth = 1.2, label = false)
 end
 
