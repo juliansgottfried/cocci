@@ -9,16 +9,16 @@ addprocs(SlurmManager())
 
 @everywhere n = 50
 @everywhere l1 = 100
-# @everywhere θ = 10
-@everywhere J = 1000
+@everywhere θ = 10
+@everywhere J = 500
 
 @everywhere dρ = 0.1
 @everywhere maxρ = 10 - dρ
 @everywhere nρ = floor(Int, maxρ / dρ) + 1
 
 @everywhere dt = 0.01
-@everywhere maxtime = 2
-@everywhere change = 20
+@everywhere maxtime = 5
+@everywhere change = 30
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 @everywhere collect0 = [load_object(generate.getfilename("prob", "5_15_26", true, ρ)) for ρ in 0:dρ:maxρ]
@@ -34,11 +34,10 @@ pmap(1:2nρ) do i
 	# ρ1 = dρ * (idx2 - 1)
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	θ = ρ + dρ
+	# θ = ρ + dρ
 	filename = generate.getfilename("data", "5_15_26", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
-		flush(stdout)
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
 			n, l1, θ, J, dρ, nρ,
 			isρ0 * ρ, !isρ0 * ρ, covariate, dt)

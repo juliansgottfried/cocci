@@ -6,7 +6,7 @@ include("estimate.jl")
 include("generate.jl")
 
 dρ = 0.1
-maxρ = 10
+maxρ = 10 - dρ
 nρ = floor(Int, maxρ / dρ) + 1
 
 data0 = [load_object(generate.getfilenamelocal("data", "5_15_26", true, ρ)) for ρ in 0:dρ:maxρ]
