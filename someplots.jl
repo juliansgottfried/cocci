@@ -6,11 +6,11 @@ include("estimate.jl")
 include("generate.jl")
 
 dρ = 0.1
-maxρ = 10 - dρ
+maxρ = 15 - dρ
 nρ = floor(Int, maxρ / dρ) + 1
 
-data0 = [load_object(generate.getfilenamelocal("data", "5_15_26_b", true, ρ)) for ρ in 0:dρ:maxρ]
-data1 = [load_object(generate.getfilenamelocal("data", "5_15_26_b", false, ρ)) for ρ in 0:dρ:maxρ]
+data0 = [load_object(generate.getfilenamelocal("data", "5_15_26_c", true, ρ)) for ρ in 0:dρ:maxρ]
+data1 = [load_object(generate.getfilenamelocal("data", "5_15_26_c", false, ρ)) for ρ in 0:dρ:maxρ]
 
 ρs = 0:dρ:maxρ
 
@@ -69,4 +69,5 @@ aicplot(2)
 ratioplot(1, 1)
 ratioplot(1, 2)
 ratioplot(2, 1)
+
 ratioplot(2, 2)

@@ -12,7 +12,7 @@ addprocs(SlurmManager())
 @everywhere m = 100000
 
 @everywhere dρ = 0.1
-@everywhere maxρ = 15 - dρ
+@everywhere maxρ = 20 - dρ
 @everywhere nρ = floor(Int, maxρ / dρ) + 1
 
 @everywhere dt = 0.01
@@ -23,7 +23,7 @@ addprocs(SlurmManager())
 pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	filename = generate.getfilename("prob", "5_15_26_c", isρ0, ρ)
+	filename = generate.getfilename("prob", "5_15_26_d", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
