@@ -325,7 +325,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
 end
 
 buildcov = function(dt, maxtime, change)
-    times = 0:dt:maxtime
+    times = dt:dt:maxtime
     growth = sign(change) * log(abs(change)) / maxtime
     N = exp.(growth * times)
     N = N ./ maximum(N)

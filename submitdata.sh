@@ -4,7 +4,7 @@ sbatch \
     --nodes=5 \
     --ntasks-per-node=20 \
     --mem=20G \
-    --time=01:30:00 \
+    --time=03:00:00 \
     --output=/scratch/users/jgottf/cocci/output/%j.out \
     --error=/scratch/users/jgottf/cocci/output/%j.out \
     --partition=normal,hns \

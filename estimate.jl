@@ -39,10 +39,13 @@ expand = function(leavesn, ancestor, timen, leavesb, timeb, n, l1)
 end
 
 getintegral = function(covariate, dt, time)
+    if time >= covariate[end, 1] 
+        return sum(covariate[:, 2]) * dt + covariate[end, 2] * (time - covariate[end, 1])
+    end
     timecut = Int(time ÷ dt) + 1
-    if timecut >= size(covariate)[1] return sum(covariate[:, 2]) * dt end
-    sum(covariate[1:timecut, 2]) * dt + 
-        covariate[timecut + 1, 2] * mod(time, dt)
+    accum = 0
+    if timecut > 1 accum = sum(covariate[1:(timecut - 1), 2]) * dt end
+    accum + covariate[timecut, 2] * mod(time, dt)
 end
 
 getvalue = function(covariate, dt, time)
