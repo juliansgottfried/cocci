@@ -316,9 +316,9 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
         idx1 = argmax(loglik1)
         lik0 = maximum(loglik0)
         lik1 = maximum(loglik1)
-        ρ0 = dρ * (idx0 - 1)
-	    ρ1 = dρ * (idx1 - 1)
-        ρhat[j, :] = [ρ0; lik0; ρ1; lik1]
+        bestρ0 = dρ * (idx0 - 1)
+	    bestρ1 = dρ * (idx1 - 1)
+        ρhat[j, :] = [bestρ0; lik0; bestρ1; lik1]
     end
     
     ρhat
