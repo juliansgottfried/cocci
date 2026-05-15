@@ -40,7 +40,7 @@ pmap(1:2nρ) do i
 		println("ρ: $ρ, ρ0: $isρ0")
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
 			n, l1, θ, J, dρ, nρ,
-			isρ0 * ρ, !isρ0 * ρ, covariate, dt)
+			isρ0 * ρ, !isρ0 * ρ, covariate)
 		save_object(filename, ρhat)
 	end
 end

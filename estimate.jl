@@ -66,9 +66,11 @@ M = function(λ, K, ρ1, covariate, dt, time)
     (λ + 0.5K * ρ1 * getvalue(covariate, dt, time)) / (λ * exp(-λ * time))
 end
 
-simulator = function(n, l1, ρ0, ρ1, covariate, dt)
+simulator = function(n, l1, ρ0, ρ1, covariate)
     leavesn, ancestor, timen, leavesb, timeb = initialize(n, l1)
     
+    dt = covariate[2, 1] - covariate[1, 1]
+
     numbern = n
     numberb = 0
     time = 0.0
@@ -172,12 +174,12 @@ sumallconfigs! = function(allconfigs, add, n, m)
     end
 end
 
-montecarlo = function(n, l1, m, ρ0, ρ1, covariate, dt)
+montecarlo = function(n, l1, m, ρ0, ρ1, covariate)
     allconfigs = [buildallconfigs(i, j, n) for i = 1:(n - 1), j = 1:(n - 1)]
 
     for i in 1:m
         mod(i, 1000) == 0 && println("Iteration ", i)
-        leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, dt)
+        leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate)
         add = configloop(allconfigs, n, leavesb, timeb, numberb)
         sumallconfigs!(allconfigs, add, n, m)
     end

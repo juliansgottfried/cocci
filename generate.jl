@@ -60,9 +60,11 @@ expand = function(intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, tim
     (newintervalsn, newleavesn, newancestor, newtimen, newintervalsb, newleavesb, newtimeb, 2l1)
 end
 
-simulator = function(n, l1, ρ0, ρ1, covariate, dt)
+simulator = function(n, l1, ρ0, ρ1, covariate)
     intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, timeb = initialize(n, l1)
     
+    dt = covariate[2, 1] - covariate[1, 1]
+
     numbern = n
     numberb = 0
     time = 0.0
@@ -241,8 +243,8 @@ simulator = function(n, l1, ρ0, ρ1, covariate, dt)
     (intervalsb, leavesb, timeb, numberb)
 end
 
-generatemut = function(n, l1, ρ0, ρ1, covariate, dt, θ)
-    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, dt)
+generatemut = function(n, l1, ρ0, ρ1, covariate, θ)
+    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate)
 
     mutants = [[] for _ in 1:n]
     allmutations = []
@@ -279,8 +281,8 @@ getconfig = function(input)
     push!(config, sum(input[1, :] .& input[2, :]))
 end
 
-getconfigs = function(n, l1, ρ0, ρ1, covariate, dt, θ)
-    contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, dt, θ)
+getconfigs = function(n, l1, ρ0, ρ1, covariate, θ)
+    contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, θ)
 
     loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
     subset = contains[loci, :]
@@ -302,13 +304,13 @@ end
 
 repeated = function(collect0, collect1, pseudo0, pseudo1,
 			n, l1, θ, J, dρ, nρ,
-			ρ0, ρ1, covariate, dt)
+			ρ0, ρ1, covariate)
     ρhat = zeros(Float64, J, 4)
     for j in 1:J
         println("sample $(j)")
-        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ)
         while length(configs) == 0 
-            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, dt, θ)
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ)
         end
         loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
             dρ, nρ, configs, dists)
