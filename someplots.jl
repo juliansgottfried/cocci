@@ -10,7 +10,7 @@ maxρ = 10 - dρ
 nρ = floor(Int, maxρ / dρ) + 1
 
 data0 = [load_object(generate.getfilenamelocal("data", "5_14_26", true, ρ)) for ρ in 0:dρ:maxρ]
-data1 = [load_object(generate.getfilenamelocal("data", "5_14_26", false, ρ)) for ρ in 0:dρ:maxρ]
+data1 = [load_object(generate.getfilenamelocal("data", "5_15_26", false, ρ)) for ρ in 0:dρ:maxρ]
 
 ρs = 0:dρ:maxρ
 
@@ -20,7 +20,7 @@ qs = [0.055, 0.5, 0.945]
 for i in 1:nρ
     # i = 1
     aic[i, 1, :] = Statistics.quantile(data0[i][:, 2] - data0[i][:, 4], qs)
-    aic[i, 2, :] = Statistics.quantile(data1[i][:, 2] - data1[i][:, 4], qs)
+    aic[i, 2, :] = Statistics.quantile(data1[i][:, 4] - data1[i][:, 2], qs)
     if ρs[i] == 0 
         ratio[i, 1, :] = [Inf; Inf; Inf]
         ratio[i, 2, :] = [Inf; Inf; Inf]
@@ -54,16 +54,19 @@ ratioplot = function(i, j)
         xlabel = "recombination rate ρ", ylabel = "log2 relative error",
         title = "$part1, $part2",
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
-        linecolor = false, label = false, grid = false)
+        linecolor = false,
+        label = false, grid = false)
     hline!([0], c = :red, alpha = 0.7, label = false)
-    plot!(ρs, log2.(maxρ ./ ρs), color = :red, label = false)
-    plot!(ρs, ratio[:, k, 2], c = :black, linewidth = 1.2, label = false)
+    plot!(ρs, log2.(maxρ ./ ρs), 
+        linestyle = :dashdot, color = "#29a0c8", label = false)
+    plot!(ρs, ratio[:, k, 2], c = :black, 
+        linewidth = 1.2, label = false)
 end
 
 aicplot(1)
 aicplot(2)
 
 ratioplot(1, 1)
-ratioplot(2, 1)
 ratioplot(1, 2)
+ratioplot(2, 1)
 ratioplot(2, 2)

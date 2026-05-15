@@ -20,10 +20,21 @@ addprocs(SlurmManager())
 @everywhere change = -30
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
-pmap(1:2nρ) do i
+#= pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
 	filename = generate.getfilename("prob", "5_14_26", isρ0, ρ)
+	if !isfile(filename)
+		println("ρ: $ρ, ρ0: $isρ0")
+		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
+		save_object(filename, results)
+	end
+end =#
+
+pmap((nρ + 1):2nρ) do i
+	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
+	isρ0 = i <= nρ
+	filename = generate.getfilename("prob", "5_15_26", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
