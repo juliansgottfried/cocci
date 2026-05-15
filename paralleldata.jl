@@ -14,7 +14,7 @@ addprocs(SlurmManager())
 
 @everywhere dρ = 0.1
 @everywhere maxρ = 20 - dρ
-@everywhere nρ = floor(Int, maxρ / dρ) + 1
+@everywhere nρ = length(0:dρ:maxρ)
 
 @everywhere dt = 0.01
 @everywhere maxtime = 1
@@ -39,7 +39,7 @@ pmap(1:2nρ) do i
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
-			n, l1, θ, J, dρ, nρ,
+			n, l1, θ, J, dρ, maxρ,
 			isρ0 * ρ, !isρ0 * ρ, covariate)
 		save_object(filename, ρhat)
 	end

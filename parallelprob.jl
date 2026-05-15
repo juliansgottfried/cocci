@@ -13,7 +13,7 @@ addprocs(SlurmManager())
 
 @everywhere dρ = 0.1
 @everywhere maxρ = 20 - dρ
-@everywhere nρ = floor(Int, maxρ / dρ) + 1
+@everywhere nρ = length(0:dρ:maxρ)
 
 @everywhere dt = 0.01
 @everywhere maxtime = 1

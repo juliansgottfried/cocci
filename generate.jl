@@ -143,12 +143,12 @@ simulator = function(n, l1, ρ0, ρ1, covariate)
             end
 
             # check for disjointedness
-            tmplen = size(tmpintervals)[1]
+            #= tmplen = size(tmpintervals)[1]
             counter = 0
             for i in 2:tmplen, j in 1:(i - 1)
                 counter += !isempty(intersect(tmpintervals[i], tmpintervals[j]))
             end
-            # println("untoward intersections: ", counter)
+            println("untoward intersections: ", counter) =#
 
             tmplen = size(tmpintervals)[1]
             for i in 1:tmplen
@@ -174,14 +174,14 @@ simulator = function(n, l1, ρ0, ρ1, covariate)
             leavesb[[numberb - 1; numberb]] = leavesn[chosen]
 
             # check for discrepancy
-            counter = 0
+            #= counter = 0
             for x in intervalsb
                 nint = size(x)[1]
                 for j in 2:nint, k in 1:(j - 1)
                     counter += x[j] == x[k]
                 end
             end
-            # println("untoward matches: ", counter)
+            println("untoward matches: ", counter) =#
 
         else
             chosen = StatsBase.sample((1:l1)[ancestor])
@@ -303,7 +303,7 @@ getconfigs = function(n, l1, ρ0, ρ1, covariate, θ)
 end
 
 repeated = function(collect0, collect1, pseudo0, pseudo1,
-			n, l1, θ, J, dρ, nρ,
+			n, l1, θ, J, dρ, maxρ,
 			ρ0, ρ1, covariate)
     ρhat = zeros(Float64, J, 4)
     for j in 1:J
@@ -313,7 +313,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ)
         end
         loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
-            dρ, nρ, configs, dists)
+            dρ, maxρ, configs, dists)
         idx0 = argmax(loglik0)
         idx1 = argmax(loglik1)
         lik0 = maximum(loglik0)
