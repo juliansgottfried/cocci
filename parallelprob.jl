@@ -7,8 +7,8 @@ addprocs(SlurmManager())
 @everywhere include("/scratch/users/jgottf/cocci/generate.jl")
 @everywhere using JLD2
 
-@everywhere n = 50
-@everywhere l1 = 100
+@everywhere n = 17
+@everywhere l1 = 25
 @everywhere m = 100000
 
 @everywhere dρ = 0.1
@@ -20,18 +20,18 @@ addprocs(SlurmManager())
 @everywhere change = 30
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
-#= pmap(1:2nρ) do i
+pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	filename = generate.getfilename("prob", "5_14_26", isρ0, ρ)
+	filename = generate.getfilename("prob", "5_15_26_b", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
 		save_object(filename, results)
 	end
-end =#
+end
 
-pmap((nρ + 1):2nρ) do i
+#= pmap((nρ + 1):2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
 	filename = generate.getfilename("prob", "5_15_26", isρ0, ρ)
@@ -40,4 +40,4 @@ pmap((nρ + 1):2nρ) do i
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
 		save_object(filename, results)
 	end
-end
+end =#
