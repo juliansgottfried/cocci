@@ -39,7 +39,7 @@ end
 # distr = Multinomial(segs, (1/strains) * ones(strains))
 # rand(distr)
 
-function segfreq_1(G, η)
+function segfreq(G, η)
     freq = [1; zeros(size - 1)]
     # sums = zeros(G)
     for i in 1:G
@@ -57,36 +57,61 @@ function segfreq_1(G, η)
     # sums
 end
 
-function segfreq_2(G, N)
-    remove(k) = 1 ./ (N .* k)
-    
-    freq = [1; zeros(size - 1)]
-    # sums = zeros(G)
-    
-    for i in 1:G
-        pairs = freq * freq'
-        for j in 1:(size - 1)
-            freq[j + 1] += sum(probs[:, :, j] .* pairs)/N
-        end
-        freq_sort = sort(freq, rev = true)
-        k = length(freq_sort[freq_sort .>= remove.(1:size)])
-        freq[freq .>= remove(k)] .-= remove(k)
-        
-        freq ./= sum(freq)
-
-        # sums[i] = sum(freq)
-    end
-    freq[2:size] ./ sum(freq[2:size])
-    # freq[2:size]
-    # sums
-end
 
 G = 365
 ηs = 0.95:0.0001:0.9999
 n_η = length(ηs)
 
-out = segfreq_1.(G, ηs)
+out = segfreq.(G, ηs)
 seg_mat = reduce(hcat, out)
+
+seg_mat_rev = seg_mat[:, n_η:-1:1]
+
+kernels = seg_mat_rev[2:50, :]
+for i in 1:500
+    kernels[:, i] ./= sum(kernels[:, i])
+end
+kernels
+plot(kernels)
+plot(kernels[:, 400])
+
+L = 0:0.01:1
+accum = ones(Float64, 500, 101)
+for i in 1:500
+    vec = seg_mat_rev[:, i]
+    for j in 0:49
+        accum[i, :] .-= vec[j + 1] .* (1 .- L) .^ j
+    end
+end
+for i in 1:500
+    accum[i, :] ./= maximum(accum[i, :])
+end
+
+colors = ["#EB2F89", "#EACD55"]
+l = @layout [a{0.95w} b]
+p1 = plot(L, accum',
+            xlim = [0, 1], ylim = [0, 1];
+            palette = palette(colors, 500),
+            alpha = 0.25, label = false,
+            linewidth = 0.8,
+            xlabel = "distance between loci", ylabel= "two-locus ρ",
+            grid = false)
+plot!(L, accum'[:, [1; 100; 200; 300; 400; 500]],
+            xlim = [0, 1], ylim = [0, 1];
+            color = :black, linewidth = 0.6,
+            alpha = 0.8,
+            label = false,
+            grid = false)
+p2 = heatmap(rand(2, 2), clims = (0.1, 50),
+            framestyle = :none,
+            c = palette(colors, ηs),
+            cbar = true,
+            lims = (-1, 0),
+            cbartitle = "1000 * r")
+plot(p1, p2, layout=l)
+
+
+
 
 # heatmap(1:cutoff, ηs, transpose(seg_mat),
 #         color = cgrad(:devon, rev = false),
@@ -111,47 +136,6 @@ function plot_curve(i)
                 titlefontcolor = string("#",hex(RGB(palette(colors, 100)[i]))),
                 linewidth = 4)
 end
-
-seg_mat_rev = seg_mat[:, n_η:-1:1]
-
-L = 0:0.01:1
-accum = ones(Float64, 500, 101)
-for i in 1:500
-    vec = seg_mat_rev[:, i]
-    for j in 0:49
-        accum[i, :] .-= vec[j + 1] .* (1 .- L) .^ j
-    end
-end
-
-# L = 0:0.01:1
-# breaks = 1.01:0.04:21
-# accum2 = zeros(Float64, 500, 101)
-# for i in 1:500
-#     accum2[i, :] .= 1 .- (1 .- L) .^ breaks[i]
-# end
-
-colors = ["#EB2F89", "#EACD55"]
-l = @layout [a{0.95w} b]
-p1 = plot(L, accum',
-            xlim = [0, 1], ylim = [0, 1];
-            palette = palette(colors, 500),
-            alpha = 0.25, label = false,
-            linewidth = 0.8,
-            xlabel = "distance between loci", ylabel= "two-locus ρ",
-            grid = false)
-#= plot!(L, accum'[:, [1; 10; 50; 100; 200; 300; 400; 500]],
-            xlim = [0, 1], ylim = [0, 1];
-            color = :black, linewidth = 0.6,
-            alpha = 0.8,
-            label = false,
-            grid = false) =#
-p2 = heatmap(rand(2, 2), clims = (0.1, 50),
-            framestyle = :none,
-            c = palette(colors, ηs),
-            cbar = true,
-            lims = (-1, 0),
-            cbartitle = "1000 * r")
-plot(p1, p2, layout=l)
 
 
 colors = ["#EB2F89", "#EACD55"]
