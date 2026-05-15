@@ -9,7 +9,7 @@ addprocs(SlurmManager())
 
 @everywhere n = 50
 @everywhere l1 = 100
-@everywhere θ = 10
+@everywhere θ = 5
 @everywhere J = 500
 
 @everywhere dρ = 0.1
@@ -18,7 +18,7 @@ addprocs(SlurmManager())
 
 @everywhere dt = 0.01
 @everywhere maxtime = 5
-@everywhere change = 30
+@everywhere change = -30
 @everywhere covariate = generate.buildcov(dt, maxtime, change)
 
 @everywhere collect0 = [load_object(generate.getfilename("prob", "5_14_26", true, ρ)) for ρ in 0:dρ:maxρ]
