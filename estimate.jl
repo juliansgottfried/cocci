@@ -1,7 +1,6 @@
 module estimate
 
-import StatsBase
-import JLD2
+import StatsBase, JLD2
 
 initialize = function(n, l1)
     leavesn = falses(n, l1, 2)

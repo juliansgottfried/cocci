@@ -1,5 +1,4 @@
-using DelimitedFiles
-using Plots
+using DelimitedFiles, Plots
 import StatsBase
 
 include("estimate.jl")

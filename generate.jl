@@ -1,9 +1,7 @@
 module generate
 
-using Intervals # https://invenia.github.io/Intervals.jl/latest/#API-1
-using JLD2
-import StatsBase
-import Distributions
+using Intervals, JLD2
+import StatsBase, Distributions
 
 if isfile("/scratch/users/jgottf/cocci/estimate.jl")
     include("/scratch/users/jgottf/cocci/estimate.jl")

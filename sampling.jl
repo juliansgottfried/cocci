@@ -1,7 +1,4 @@
-using Plots
-using Distributions
-using LinearAlgebra
-using Colors
+using Plots, Distributions, LinearAlgebra, Colors
 
 function prob(m1, m2, K)
     i = max(0, K - m2):min(K, m1)

@@ -1,7 +1,5 @@
-using Plots
-using JLD2
-import Statistics
-import Distributions
+using Plots, JLD2
+import Statistics, Distributions
 
 include("estimate.jl")
 include("generate.jl")
