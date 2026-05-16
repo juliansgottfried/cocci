@@ -3,11 +3,14 @@ import Statistics, Distributions
 
 include("estimate.jl")
 include("generate.jl")
+include("kernels.jl")
 
 dρ = 0.1
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
+
+# Retrodiction plots
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
@@ -79,7 +82,9 @@ ratioplot(1, 2)
 ratioplot(2, 1)
 ratioplot(2, 2)
 
+
 # LD plots
+
 getrsq = function(ρidx, prob0, n)
     configs = []
     probs = []
@@ -98,26 +103,31 @@ getrsq = function(ρidx, prob0, n)
     sum(probs .* rsq)
 end
 
-rsq = [getrsq(i, prob0, n) for i in 1:nρ]
-
-getidx(whichkernel) = Int.(div.(ρ .* accum[whichkernel, :], dρ)) .+ 1
+fetchidx = function(whichkernel, accum, ρ, dρ)
+    Int.(div.(ρ .* accum[whichkernel, :], dρ)) .+ 1
+end
 
 prob0 = [load_object(generate.getfilenamelocal("prob", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
 n = 17
-ρ = 19.9
 dists = 0:0.01:1
+rsq = [getrsq(i, prob0, n) for i in 1:nρ]
 
-nkern = 500
-nbrks = 49
-accum = ones(Float64, nkern, length(dists))
-for i in 1:nkern
-    for j in 1:nbrks
-        accum[i, :] .-= kernels[:, i][j] .* (1 .- dists) .^ j
+G = 365
+ηs = 0.95:0.0001:0.9999
+maxbrk = 50
+kernelcollect = kernels.getkernels(G, ηs, maxbrk)
+
+nη = length(ηs)
+
+accum = ones(Float64, nη, length(dists))
+for i in 1:nη
+    for j in 1:(maxbrk - 1)
+        accum[i, :] .-= kernelcollect[:, i][j] .* (1 .- dists) .^ j
     end
 end
 
-whichkernel = 1:20:nkern
-ρidx = getidx.(whichkernel)
+whichkernel = 1:20:nη
+ρidx = [fetchidx(kern, accum, maxρ, dρ) for kern in whichkernel]
 
 plotrsq = zeros(Float64, length(dists), length(whichkernel))
 for i in eachindex(whichkernel)

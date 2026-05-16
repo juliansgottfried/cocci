@@ -4,7 +4,7 @@ import StatsBase
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 1
+dρ = 0.1
 maxρ = 100 - dρ
 
 n = 17

@@ -1,3 +1,5 @@
+module kernels
+
 using Plots, Distributions, LinearAlgebra, Colors
 
 function prob(m1, m2, K)
@@ -7,69 +9,49 @@ function prob(m1, m2, K)
     sum(exp.(term1 .+ term2))
 end
 
-size = 50
-probs = zeros(size, size, 2size + 1)
-for i in 1:size
-    for j in 1:i
-        ks = 1:(ceil(Int, (i + j - 2) / 2) + 1)
-        for k in ks
-            probs[i, j, k] = prob(i - 1, j - 1, k - 1)
-            probs[i, j, i + j - k] = probs[i, j, k]
+getprobs = function(maxbrk)
+    probs = zeros(Float64, maxbrk, maxbrk, 2maxbrk + 1)
+    for i in 1:maxbrk
+        for j in 1:i
+            ks = 1:(ceil(Int, (i + j - 2) / 2) + 1)
+            for k in ks
+                probs[i, j, k] = prob(i - 1, j - 1, k - 1)
+                probs[i, j, i + j - k] = probs[i, j, k]
+            end
         end
     end
+    for k in 1:(2maxbrk + 1)
+        probs[:, :, k] = probs[:, :, k] .+ probs[:, :, k]' .- diagm(diag(probs[:, :, k]))
+    end
+    probs
 end
-for k in 1:(2size + 1)
-    probs[:, :, k] = probs[:, :, k] .+ probs[:, :, k]' .- diagm(diag(probs[:, :, k]))
-end
 
-# m1 between 0 and 50
-# m2 between 0 and 50
-# K betweem 0 and m1 + m2
-# retrieve(m1, m2, K) = probs[max(m1, m2) + 1, min(m1, m2) + 1, K + 1]
-
-# plot(0:10, freq[1:11],
-#         ylim = [0, 1],
-#         label = false, color = :black)
-
-# strains = 2
-# segs = 5
-# distr = Multinomial(segs, (1/strains) * ones(strains))
-# rand(distr)
-
-function segfreq(G, η)
-    freq = [1; zeros(size - 1)]
-    # sums = zeros(G)
+segfreq = function(G, η, maxbrk, probs)
+    freq = [1; zeros(maxbrk - 1)]
     for i in 1:G
         pairs = freq * freq'
         freq *= η
-        for j in 1:(size - 1)
+        for j in 1:(maxbrk - 1)
             freq[j + 1] += (1 - η) * sum(probs[:, :, j] .* pairs)
         end
-        # sums[i] = sum(freq)
         freq ./= sum(freq)
     end
-    # freq[2:size] ./ sum(freq[2:size])
     freq ./ sum(freq)
-    # freq[2:size]
-    # sums
 end
 
-
-G = 365
-ηs = 0.95:0.0001:0.9999
-n_η = length(ηs)
-
-out = segfreq.(G, ηs)
-seg_mat = reduce(hcat, out)
-
-seg_mat_rev = seg_mat[:, n_η:-1:1]
-
-kernels = seg_mat_rev[2:50, :]
-for i in 1:500
-    kernels[:, i] ./= sum(kernels[:, i])
+getkernels = function(G, ηs, maxbrk)
+    probs = getprobs(maxbrk)
+    nη = length(ηs)
+    out = [segfreq(G, η, maxbrk, probs) for η in ηs]
+    out = reduce(hcat, out)[:, nη:-1:1]
+    kernels = out[2:maxbrk, :]
+    for i in 1:nη
+        kernels[:, i] ./= sum(kernels[:, i])
+    end
+    kernels
 end
-kernels
-plot(kernels)
+
+#= plot(kernels)
 plot(kernels[:, 200])
 sum(kernels[:, 200] .* (1:49))
 
@@ -196,4 +178,6 @@ plot(p1, p2, layout=l)
 
 strains = 3
 junctions = 20
-rand(Multinomial(junctions, ones(strains) ./ strains))
+rand(Multinomial(junctions, ones(strains) ./ strains)) =#
+
+end
