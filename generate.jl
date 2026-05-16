@@ -60,10 +60,12 @@ expand = function(intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, tim
     (newintervalsn, newleavesn, newancestor, newtimen, newintervalsb, newleavesb, newtimeb, 2l1)
 end
 
-simulator = function(n, l1, ρ0, ρ1, covariate)
+simulator = function(n, l1, ρ0, ρ1, covariate, pvec)
     intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, timeb = initialize(n, l1)
     
     dt = covariate[2, 1] - covariate[1, 1]
+
+    distr = Distributions.Multinomial(1, pvec)
 
     numbern = n
     numberb = 0
@@ -185,50 +187,44 @@ simulator = function(n, l1, ρ0, ρ1, covariate)
 
         else
             chosen = StatsBase.sample((1:l1)[ancestor])
-            brkpt = rand()
-            
-            len = size(intervalsn[chosen])[1]
-            blacksets = []
-            whitesets = []
-            blackleaves = []
-            whiteleaves = []
-            blacktally = 0
-            whitetally = 0
-            
-            for i in 1:len
-                tmpblack = intersect(intervalsn[chosen][i], 0..brkpt)
-                tmpwhite = intersect(intervalsn[chosen][i], brkpt..1)
-                if !isempty(tmpblack)
-                    push!(blacksets, tmpblack)
-                    push!(blackleaves, leavesn[chosen][i])
-                    blacktally += sum(leavesn[chosen][i]) != n
-                end
-                if !isempty(tmpwhite)
-                    push!(whitesets, tmpwhite)
-                    push!(whiteleaves, leavesn[chosen][i])
-                    whitetally += sum(leavesn[chosen][i]) != n
-                end
-            end
-            
-            if blacktally == 0 || whitetally == 0
-                continue
-            end
-
             ancestor[chosen] = 0
+            len = size(intervalsn[chosen])[1]
 
-            numbern += 2
-            numberb += 1
-            
-            if numbern > l1 || numberb > l1
+            nbrk = argmax(rand(distr))
+            brkpts = sort([0; rand(nbrk); 1])
+
+            if numbern + nbrk + 1 > l1 || numberb + 1 > l1
                 intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, timeb, l1 = expand(intervalsn, leavesn, ancestor, timen, intervalsb, leavesb, timeb, l1)
             end
 
-            ancestor[[numbern - 1; numbern]] .= 1
-            timen[[numbern - 1; numbern]] .= time
-        
-            intervalsn[[numbern - 1; numbern]] = [blacksets, whitesets]
-            leavesn[[numbern - 1; numbern]] = [blackleaves, whiteleaves]
+            sets = [[] for i in 1:(nbrk + 1)]
+            leaves = [[] for i in 1:(nbrk + 1)]
+    
+            for i in 1:(nbrk + 1)
+                for j in 1:len
+                    if sum(leavesn[chosen][j]) == n continue end
+                    parent = intersect(intervalsn[chosen][j], brkpts[i]..brkpts[i + 1])
+                    if !isempty(parent)
+                        push!(sets[i], parent)
+                        push!(leaves[i], leavesn[chosen][j])
+                    end
+                end
+            end
 
+            parents = sets[length.(sets) .> 0]
+            parentleaves = leaves[length.(sets) .> 0]
+            nparents = size(parents)[1]
+
+            numbern += nparents
+            numberb += 1
+
+            for i in 1:nparents
+                ancestor[numbern - i + 1] = 1
+                timen[numbern - i + 1] = time
+                intervalsn[numbern - i + 1] = parents[i]
+                leavesn[numbern - i + 1] = parentleaves[i]
+            end
+            
             timeb[numberb] = time - timen[chosen]
 
             intervalsb[numberb] = intervalsn[chosen]
@@ -243,8 +239,8 @@ simulator = function(n, l1, ρ0, ρ1, covariate)
     (intervalsb, leavesb, timeb, numberb)
 end
 
-generatemut = function(n, l1, ρ0, ρ1, covariate, θ)
-    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate)
+generatemut = function(n, l1, ρ0, ρ1, covariate, θ, pvec)
+    intervalsb, leavesb, timeb, numberb = simulator(n, l1, ρ0, ρ1, covariate, pvec)
 
     mutants = [[] for _ in 1:n]
     allmutations = []
@@ -281,8 +277,8 @@ getconfig = function(input)
     push!(config, sum(input[1, :] .& input[2, :]))
 end
 
-getconfigs = function(n, l1, ρ0, ρ1, covariate, θ)
-    contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, θ)
+getconfigs = function(n, l1, ρ0, ρ1, covariate, θ, pvec)
+    contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, θ, pvec)
 
     loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
     subset = contains[loci, :]
@@ -304,13 +300,13 @@ end
 
 repeated = function(collect0, collect1, pseudo0, pseudo1,
 			n, l1, θ, J, dρ, maxρ,
-			ρ0, ρ1, covariate)
+			ρ0, ρ1, covariate, pvec)
     ρhat = zeros(Float64, J, 4)
     for j in 1:J
         println("sample $(j)")
-        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ)
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
         while length(configs) == 0 
-            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ)
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
         end
         loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
             dρ, maxρ, configs, dists)

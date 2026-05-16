@@ -73,7 +73,8 @@ for i in 1:500
 end
 kernels
 plot(kernels)
-plot(kernels[:, 400])
+plot(kernels[:, 200])
+sum(kernels[:, 200] .* (1:49))
 
 L = 0:0.01:1
 accum = ones(Float64, 500, 101)
