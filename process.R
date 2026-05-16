@@ -80,14 +80,9 @@ gs <- bounds * mu_bp / tmrca
 # get the scaling!
 scales <- Ne*gs
 
-# choose things
-fraction <- 0.05
-nloci <- 100
+# write data
 chrom <- genotypes$Chromosome %>% table %>% which.max %>% names
 filtered <- genotypes %>% filter(Chromosome == chrom)
-window <- ceiling(fraction * diff(range(filtered$Position)))
-
-# write data
 filtered %>% 
     select(Sample1:Sample17, Position) %>% 
     mutate(Position = Position - min(Position) + 1) %>% 

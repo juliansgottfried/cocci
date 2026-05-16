@@ -4,13 +4,13 @@ import StatsBase
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 0.1
-maxρ = 20 - dρ
+dρ = 1
+maxρ = 100 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilename("prob", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilename("prob", "5_16_26_a", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_16_26_a", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -19,16 +19,16 @@ covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
-nsample = 100
-window = 421593
+nsample = 25
+window = 1000
 nwindow = maximum(alleles[:, end]) - window
 
-S = 100
+S = 1000
 ρhat = zeros(Float64, S, 4)
-
 for i in 1:S
     subset = falses(nloci)
-    while sum(subset) < 100
+    println(i)
+    while sum(subset) < nsample
         windowidx = StatsBase.sample((1:nwindow), 1)[1]
         subset = (alleles[:, end] .>= windowidx) .& (alleles[:, end] .<= windowidx + window)
     end
@@ -55,8 +55,10 @@ for i in 1:S
     ρhat[i, :] = [bestρ0; lik0; bestρ1; lik1]
 end
 
-mean(ρhat[:, 2])
-mean(ρhat[:, 4])
+density(ρhat[:, 2] .- ρhat[:, 4], color = :black, label = false, grid = false)
+vline!([0], c = :red, alpha = 0.7, label = false)
 
-density(ρhat[:, 1], color = :black, label = false, grid = false)
-density(ρhat[:, 3], color = :black, label = false, grid = false)
+histogram(ρhat[:, 1], linecolor = :white, color = :black, bins = 50,
+    label = false, grid = false)
+histogram(ρhat[:, 3], linecolor = :white, color = :black, bins = 50,
+    label = false, grid = false)

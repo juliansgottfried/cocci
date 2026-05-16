@@ -11,8 +11,8 @@ addprocs(SlurmManager())
 @everywhere l1 = 25
 @everywhere m = 100000
 
-@everywhere dρ = 0.1
-@everywhere maxρ = 20 - dρ
+@everywhere dρ = 1
+@everywhere maxρ = 100 - dρ
 @everywhere nρ = length(0:dρ:maxρ)
 
 @everywhere covariate = readdlm("/scratch/users/jgottf/cocci/rodent_data/covariate.csv", ',', Any, '\n')
@@ -22,24 +22,24 @@ addprocs(SlurmManager())
 @everywhere change = 30
 @everywhere covariate = generate.buildcov(dt, maxtime, change)   =#
 
-#=  pmap(1:2nρ) do i
+pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	filename = generate.getfilename("prob", "5_16_26_a", isρ0, ρ)
-	if !isfile(filename)
-		println("ρ: $ρ, ρ0: $isρ0")
-		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
-		save_object(filename, results)
-	end
-end  =#
-
-pmap((nρ + 1):2nρ) do i
-	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
-	isρ0 = i <= nρ
-	filename = generate.getfilename("prob", "5_16_26_a", isρ0, ρ)
+	filename = generate.getfilename("prob", "5_16_26_b", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
 		save_object(filename, results)
 	end
 end
+
+#= pmap((nρ + 1):2nρ) do i
+	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
+	isρ0 = i <= nρ
+	filename = generate.getfilename("prob", "5_16_26_b", isρ0, ρ)
+	if !isfile(filename)
+		println("ρ: $ρ, ρ0: $isρ0")
+		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
+		save_object(filename, results)
+	end
+end =#
