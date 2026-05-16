@@ -9,8 +9,8 @@ maxρ = 100 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_16_26_a", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_16_26_c", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_16_26_c", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -20,7 +20,7 @@ alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
 nsample = 25
-window = 1000
+window = 500
 nwindow = maximum(alleles[:, end]) - window
 
 S = 1000
@@ -55,10 +55,15 @@ for i in 1:S
     ρhat[i, :] = [bestρ0; lik0; bestρ1; lik1]
 end
 
-density(ρhat[:, 2] .- ρhat[:, 4], color = :black, label = false, grid = false)
-vline!([0], c = :red, alpha = 0.7, label = false)
+density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
+vline!([2], c = :red, alpha = 0.7, label = false)
 
-histogram(ρhat[:, 1], linecolor = :white, color = :black, bins = 50,
-    label = false, grid = false)
-histogram(ρhat[:, 3], linecolor = :white, color = :black, bins = 50,
-    label = false, grid = false)
+boxplot(ρhat[:, [1;3]],
+    color = :white, whisker_width = 0.2, outliers = false,
+    xticks = false, label = false, grid = false)
+
+histogram(ρhat[:, 1], linecolor = :white, color = :black, 
+    bins = 25, label = false, grid = false)
+histogram(ρhat[:, 3], linecolor = :white, color = :black,
+     bins = 25, label = false, grid = false)
+    

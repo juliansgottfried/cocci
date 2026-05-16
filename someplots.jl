@@ -7,6 +7,7 @@ include("generate.jl")
 dρ = 0.1
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
+ρs = 0:dρ:maxρ
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
