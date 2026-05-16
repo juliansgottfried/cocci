@@ -115,6 +115,7 @@ rsq = [getrsq(i, prob0, n) for i in 1:nρ]
 G = 365
 ηs = 0.95:0.0001:0.9999
 maxbrk = 50
+
 kernelcollect = kernels.getkernels(G, ηs, maxbrk)
 
 nη = length(ηs)
