@@ -14,7 +14,6 @@ loadit(filename) = if isfile(filename) return load_object(filename) end
 
 data0 = [loadit(generate.getfilenamelocal("data", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
 data1 = [loadit(generate.getfilenamelocal("data", "5_15_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
-
 skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
@@ -25,15 +24,19 @@ for i in 1:nρ
         aic[i, :, :] .= -Inf
         ratio[i, :, :] .= -Inf
     else
-        aic[i, 1, :] = Statistics.quantile(data0[i][:, 2] - data0[i][:, 4], qs)
-        aic[i, 2, :] = Statistics.quantile(data1[i][:, 4] - data1[i][:, 2], qs)
+        aic[i, 1, :] = Statistics.quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
+        aic[i, 2, :] = Statistics.quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
         if ρs[i] == 0 
             ratio[i, :, :] .= Inf
         else
-            ratio[i, 1, :] = Statistics.quantile(log2.(data0[i][:, 1] ./ ρs[i]), qs)
-            ratio[i, 2, :] = Statistics.quantile(log2.(data0[i][:, 3] ./ ρs[i]), qs)
-            ratio[i, 3, :] = Statistics.quantile(log2.(data1[i][:, 1] ./ ρs[i]), qs)
-            ratio[i, 4, :] = Statistics.quantile(log2.(data1[i][:, 3] ./ ρs[i]), qs)
+            tmp0 = data0[i][:, [1; 3]]
+            tmp0[tmp0 .== 0] .= 0.1
+            tmp1 = data1[i][:, [1; 3]]
+            tmp1[tmp1 .== 0] .= 0.1
+            ratio[i, 1, :] = Statistics.quantile(log2.(tmp0[:, 1] ./ ρs[i]), qs)
+            ratio[i, 2, :] = Statistics.quantile(log2.(tmp0[:, 2] ./ ρs[i]), qs)
+            ratio[i, 3, :] = Statistics.quantile(log2.(tmp1[:, 1] ./ ρs[i]), qs)
+            ratio[i, 4, :] = Statistics.quantile(log2.(tmp1[:, 2] ./ ρs[i]), qs)
         end
     end
 end
@@ -42,11 +45,11 @@ end
 
 aicplot = function(i)
     plot(ρs, aic[:, i, 1], fillrange = aic[:, i, 3], 
-        xlabel = "recombination rate ρ", ylabel = "Δ AIC",
+        xlabel = "recombination rate", ylabel = "Δ AIC",
         title = i == 1 ? "constant data" : "varying data",
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
         linecolor = false, label = false, grid = false)
-    hline!([1], c = :red, alpha = 0.7, label = false)
+    hline!([2], c = :red, alpha = 0.7, label = false)
     plot!(ρs, aic[:, i, 2], c = :black, linewidth = 1.2, label = false)
 end
 
@@ -55,14 +58,16 @@ ratioplot = function(i, j)
     part1 = i == 1 ? "constant data" : "varying data"
     part2 = j == 1 ? "constant model" : "varying model"
     plot(ρs, ratio[:, k, 1], fillrange = ratio[:, k, 3], 
-        xlabel = "recombination rate ρ", ylabel = "log2 relative error",
+        xlabel = "recombination rate", ylabel = "log2 relative error",
         title = "$part1, $part2",
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
         linecolor = false,
         label = false, grid = false)
     hline!([0], c = :red, alpha = 0.7, label = false)
     plot!(ρs, log2.(maxρ ./ ρs), 
-        linestyle = :dashdot, color = "#29a0c8", label = false)
+        linestyle = :dash, color = "#29a0c8", label = false)
+    plot!(ρs, log2.(dρ ./ ρs), 
+        linestyle = :dash, color = "#29a0c8", label = false)
     plot!(ρs, ratio[:, k, 2], c = :black, 
         linewidth = 1.2, label = false)
 end
@@ -74,7 +79,6 @@ ratioplot(1, 1)
 ratioplot(1, 2)
 ratioplot(2, 1)
 ratioplot(2, 2)
-
 
 # LD plots
 getrsq = function(ρidx, prob0, n)
