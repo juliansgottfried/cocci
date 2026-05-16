@@ -1,11 +1,11 @@
 #!/usr/bin/env julia
 
-using Distributed, SlurmClusterManager, DelimitedFiles
+using Distributed, SlurmClusterManager
 addprocs(SlurmManager())
 
 @everywhere include("/scratch/users/jgottf/cocci/estimate.jl")
 @everywhere include("/scratch/users/jgottf/cocci/generate.jl")
-@everywhere using JLD2
+@everywhere using JLD2, DelimitedFiles
 
 @everywhere n = 17
 @everywhere l1 = 25
