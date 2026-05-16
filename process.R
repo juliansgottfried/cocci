@@ -16,17 +16,17 @@ variants <- variants[called,]
 polymorphic <- as.numeric(sapply(str_split(sapply(str_split(variants$INFO,";"),\(x) x[4]),"="),\(x) x[2]))!=n
 variants <- variants[polymorphic,]
 
-# variants <- variants %>% arrange(CHROM, POS)
-# keep <- rep(F, nrow(variants))
-# prev_idx <- 1
-# keep[1] <- T
-# for (i in 2:nrow(variants)) {
-#     if (abs(variants$POS[i] - variants$POS[prev_idx]) >= 100) {
-#         prev_idx <- i
-#         keep[i] <- T
-#     }
-# }
-# variants <- variants[keep, ]
+variants <- variants %>% arrange(CHROM, POS)
+keep <- rep(F, nrow(variants))
+prev_idx <- 1
+keep[1] <- T
+for (i in 2:nrow(variants)) {
+    if (abs(variants$POS[i] - variants$POS[prev_idx]) >= 100) {
+        prev_idx <- i
+        keep[i] <- T
+    }
+}
+variants <- variants[keep, ]
 
 genotypes <- data.frame(apply(variants %>% select(starts_with("Sample")), 2, function(x) {
     as.numeric(sapply(str_split(sapply(str_split(x, ":"), \(x) x[1]), "/"), \(x) x[1]))
@@ -54,7 +54,6 @@ write_csv(genotypes,"genomic_data/california_data.csv")
 # get whole sample sequences
 paste0(with(genotypes,ifelse(Sample7,Minor,Major)),collapse="")
 
-
 # get constant sites
 chroms <- unique(genotypes$Chromosome)
 getconst <- function(i) {
@@ -67,20 +66,54 @@ getconst <- function(i) {
 }
 apply(sapply(1:8, getconst), 1, sum)
 
-
 # estimate Ne
 mu_bp <- 10^(-10)
 L <- 28.9 * 10^6
 mu <- mu_bp*L
 Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
-Ne <- 10^7
 
 # estimate gen time in years
 tmrca <- 2.85*10^(-5)
-low <- 1500
-high <- 5500
-g_low = low * mu_bp / tmrca
-g_high = high * mu_bp / tmrca
-g <- 10^(-2)
+bounds <- c(1500, 5500)
+gs <- bounds * mu_bp / tmrca
 
-scaling <- Ne*g
+# get the scaling!
+scales <- Ne*gs
+
+# choose things
+fraction <- 0.05
+nloci <- 100
+chrom <- genotypes$Chromosome %>% table %>% which.max %>% names
+filtered <- genotypes %>% filter(Chromosome == chrom)
+window <- ceiling(fraction * diff(range(filtered$Position)))
+
+# write data
+filtered %>% 
+    select(Sample1:Sample17, Position) %>% 
+    mutate(Position = Position - min(Position) + 1) %>% 
+    write_csv(col_names = F, "sampling_data/alleles.csv")
+
+# smooth rodent data
+rodents <- read_csv("rodent_data/rodents.csv")
+rodents$time <- rodents$time / mean(scales)
+nsp <- ncol(rodents) - 1
+dt <- 0.01
+mintime <- ceiling(min(rodents$time) / dt) * dt
+newdata = data.frame(time = seq(from = mintime, 
+                                to = max(rodents$time), 
+                                by = 0.01))
+newdata$Ne <- 0
+for (i in 1:nsp) {
+    fit <- loess(pull(rodents[, i + 1]) ~ time, rodents, span = 0.75)
+    newdata$Ne <- newdata$Ne + predict(fit, newdata)
+}
+newdata$Ne <- newdata$Ne / max(newdata$Ne)
+newdata <- rbind(
+    data.frame(time = seq(from = dt, by = dt, to = mintime - dt), 
+               Ne = rep(newdata$Ne[1], mintime / dt - 1)),
+    newdata)
+ggplot(newdata, aes(x = time, y = Ne))+
+    geom_line()+
+    ylim(0, 1) +
+    theme_classic()
+write_csv(newdata, col_names = F, "rodent_data/covariate.csv")
