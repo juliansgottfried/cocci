@@ -5,21 +5,23 @@ addprocs(SlurmManager())
 
 @everywhere include("/scratch/users/jgottf/cocci/estimate.jl")
 @everywhere include("/scratch/users/jgottf/cocci/generate.jl")
-@everywhere using JLD2
+@everywhere using JLD2, DelimitedFiles
 
 @everywhere n = 17
 @everywhere l1 = 25
-@everywhere θ = 5
+@everywhere θ = 0.3
 @everywhere J = 500
 
-@everywhere dρ = 0.1
+@everywhere dρ = 0.2
 @everywhere maxρ = 20 - dρ
 @everywhere nρ = length(0:dρ:maxρ)
 
-@everywhere dt = 0.01
+@everywhere covariate = readdlm("/scratch/users/jgottf/cocci/rodent_data/covariate.csv", ',', Any, '\n')
+
+#= @everywhere dt = 0.01
 @everywhere maxtime = 1
 @everywhere change = 30
-@everywhere covariate = generate.buildcov(dt, maxtime, change)
+@everywhere covariate = generate.buildcov(dt, maxtime, change) =#
 
 @everywhere pvec = 1
 
@@ -37,7 +39,7 @@ pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
 	# θ = ρ + dρ
-	filename = generate.getfilename("data", "5_15_26_d", isρ0, ρ)
+	filename = generate.getfilename("data", "5_16_26_d", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,

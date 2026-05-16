@@ -72,6 +72,10 @@ L <- 28.9 * 10^6
 mu <- mu_bp*L
 Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
 
+# estimate theta
+window <- 500
+theta <- mu_bp * window * Ne
+
 # estimate gen time in years
 tmrca <- 2.85*10^(-5)
 bounds <- c(1500, 5500)
