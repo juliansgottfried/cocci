@@ -6,7 +6,7 @@ include("generate.jl")
 include("kernels.jl")
 
 dρ = 0.1
-maxρ = 20 - dρ
+maxρ = 10 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
 
@@ -14,8 +14,8 @@ nρ = length(0:dρ:maxρ)
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
-data0 = [loadit(generate.getfilenamelocal("data", "5_15_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
-data1 = [loadit(generate.getfilenamelocal("data", "5_15_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
+data0 = [loadit(generate.getfilenamelocal("data", "5_16_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
+data1 = [loadit(generate.getfilenamelocal("data", "5_16_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
 skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
