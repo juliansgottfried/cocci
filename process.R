@@ -68,13 +68,11 @@ apply(sapply(1:8, getconst), 1, sum)
 
 # estimate Ne
 mu_bp <- 10^(-10)
+
 L <- 28.9 * 10^6
 mu <- mu_bp*L
 Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
-
-# estimate theta
-window <- 500
-theta <- mu_bp * window * Ne
+Ne <- 10^7
 
 # estimate gen time in years
 tmrca <- 2.85*10^(-5)
@@ -119,4 +117,4 @@ newdata %>%
     xlim(0, 3) +
     facet_wrap(~species, ncol = 1) +
     theme_classic()
-write_csv(newdata %>% select(time, merriami_green), col_names = F, "rodent_data/covariate.csv")
+write_csv(newdata %>% select(time, stephensi_chartreuse), col_names = F, "rodent_data/covariate.csv")

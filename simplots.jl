@@ -14,8 +14,8 @@ nρ = length(0:dρ:maxρ)
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
-data0 = [loadit(generate.getfilenamelocal("data", "5_16_26_j", true, ρ)) for ρ in 0:dρ:maxρ]
-data1 = [loadit(generate.getfilenamelocal("data", "5_16_26_j", false, ρ)) for ρ in 0:dρ:maxρ]
+data0 = [loadit(generate.getfilenamelocal("data", "5_17_26_a", true, ρ)) for ρ in 0:dρ:maxρ]
+data1 = [loadit(generate.getfilenamelocal("data", "5_17_26_a", false, ρ)) for ρ in 0:dρ:maxρ]
 skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
