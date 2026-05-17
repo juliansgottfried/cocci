@@ -9,7 +9,7 @@ addprocs(SlurmManager())
 
 @everywhere n = 17
 @everywhere l1 = 25
-@everywhere θ = 5
+@everywhere θ = 10
 @everywhere J = 500
 
 @everywhere dρ = 0.1
@@ -39,7 +39,7 @@ pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
 	# θ = ρ + dρ
-	filename = generate.getfilename("data", "5_16_26_e", isρ0, ρ)
+	filename = generate.getfilename("data", "5_16_26_f", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
