@@ -94,6 +94,7 @@ filtered %>%
 
 # smooth rodent data
 rodents <- read_csv("rodent_data/rodents.csv")
+sp <- colnames(rodents)[2:ncol(rodents)]
 rodents$time <- rodents$time / mean(scales)
 nsp <- ncol(rodents) - 1
 dt <- 0.01
@@ -101,18 +102,21 @@ mintime <- ceiling(min(rodents$time) / dt) * dt
 newdata = data.frame(time = seq(from = mintime, 
                                 to = max(rodents$time), 
                                 by = 0.01))
-newdata$Ne <- 0
 for (i in 1:nsp) {
-    fit <- loess(pull(rodents[, i + 1]) ~ time, rodents, span = 0.75)
-    newdata$Ne <- newdata$Ne + predict(fit, newdata)
+    fit <- loess(pull(rodents[, i + 1]) ~ time, rodents, span = 0.25)
+    newdata[sp[i]] <- predict(fit, newdata)
 }
-newdata$Ne <- newdata$Ne / max(newdata$Ne)
-newdata <- rbind(
-    data.frame(time = seq(from = dt, by = dt, to = mintime - dt), 
-               Ne = rep(newdata$Ne[1], mintime / dt - 1)),
-    newdata)
-ggplot(newdata, aes(x = time, y = Ne))+
-    geom_line()+
+newdata$all <- apply(newdata[, 2:(nsp + 1)], 1, sum)
+newdata[, 2:(nsp + 2)] <- apply(newdata[, 2:(nsp + 2)], 2, \(x) x / max(x))
+adder <- cbind(data.frame(time = seq(from = dt, by = dt, to = mintime - dt)),
+      newdata[1, 2:ncol(newdata)])
+newdata <- rbind(adder, newdata)
+newdata %>% 
+    pivot_longer(cols = -time, names_to = "species", values_to = "Ne") %>% 
+    ggplot(aes(x = time, y = Ne)) +
+    geom_line() +
     ylim(0, 1) +
+    xlim(0, 3) +
+    facet_wrap(~species, ncol = 1) +
     theme_classic()
-write_csv(newdata, col_names = F, "rodent_data/covariate.csv")
+write_csv(newdata %>% select(time, merriami_green), col_names = F, "rodent_data/covariate.csv")

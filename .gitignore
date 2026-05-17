@@ -2,5 +2,6 @@ prob
 data
 output
 genomic_data
-rodent_data
+rodent_data/rodents.csv
+rodent_data/screenshot.png
 sampling_data
