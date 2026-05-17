@@ -25,8 +25,8 @@ addprocs(SlurmManager())
 
 @everywhere pvec = 1
 
-@everywhere collect0 = [load_object(generate.getfilename("prob", "5_16_26_h", true, ρ)) for ρ in 0:dρ:maxρ]
-@everywhere collect1 = [load_object(generate.getfilename("prob", "5_16_26_h", false, ρ)) for ρ in 0:dρ:maxρ]
+@everywhere collect0 = [load_object(generate.getfilename("prob", "5_16_26_i", true, ρ)) for ρ in 0:dρ:maxρ]
+@everywhere collect1 = [load_object(generate.getfilename("prob", "5_16_26_i", false, ρ)) for ρ in 0:dρ:maxρ]
 
 @everywhere pseudo0 = estimate.getpseudo(collect0, n)
 @everywhere pseudo1 = estimate.getpseudo(collect1, n)
@@ -39,7 +39,7 @@ pmap(1:2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
 	# θ = ρ + dρ
-	filename = generate.getfilename("data", "5_16_26_h", isρ0, ρ)
+	filename = generate.getfilename("data", "5_16_26_i", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,

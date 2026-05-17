@@ -119,4 +119,4 @@ newdata %>%
     xlim(0, 3) +
     facet_wrap(~species, ncol = 1) +
     theme_classic()
-write_csv(newdata %>% select(time, merriami_green), col_names = F, "rodent_data/covariate.csv")
+write_csv(newdata %>% select(time, stephensi_chartreuse), col_names = F, "rodent_data/covariate.csv")
