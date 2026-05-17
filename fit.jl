@@ -66,17 +66,3 @@ histogram(ρhat[:, 3], linecolor = :white, color = :black,
     xticks = false, label = false, grid = false)
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
     bins = Int(floor(maxρ + 1) / 4), label = false, grid = false) =#
-    
-
-# significance testing
-nullρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
-    n, 17, 0.3, 1000, dρ, maxρ,
-	0, 5, covariate, 1)
-
-StatsBase.mean(2(nullρhat[:, 4] .- nullρhat[:, 2]))
-
-StatsPlots.density(2(nullρhat[:, 4] .- nullρhat[:, 2]), color = :black, label = false, grid = false)
-vline!([-2], c = :red, alpha = 0.7, label = false)
-
-histogram(nullρhat[:, 3], linecolor = :white, color = :black,
-     bins = Int(floor(maxρ + 1) / 4), label = false, grid = false)

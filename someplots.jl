@@ -20,26 +20,32 @@ skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
 ratio = zeros(Float64, nρ, 4, 3)
+raw = zeros(Float64, nρ, 4, 3)
 qs = [0.055, 0.5, 0.945]
 for i in 1:nρ
     if skip[i] 
         aic[i, :, :] .= -Inf
         ratio[i, :, :] .= -Inf
+        raw[i, :, :] .= -Inf
     else
         aic[i, 1, :] = Statistics.quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
         aic[i, 2, :] = Statistics.quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
-        if ρs[i] == 0 
-            ratio[i, :, :] .= Inf
-        else
-            tmp0 = data0[i][:, [1; 3]]
-            tmp0[tmp0 .== 0] .= 0.1
-            tmp1 = data1[i][:, [1; 3]]
-            tmp1[tmp1 .== 0] .= 0.1
-            ratio[i, 1, :] = Statistics.quantile(log2.(tmp0[:, 1] ./ ρs[i]), qs)
-            ratio[i, 2, :] = Statistics.quantile(log2.(tmp0[:, 2] ./ ρs[i]), qs)
-            ratio[i, 3, :] = Statistics.quantile(log2.(tmp1[:, 1] ./ ρs[i]), qs)
-            ratio[i, 4, :] = Statistics.quantile(log2.(tmp1[:, 2] ./ ρs[i]), qs)
-        end
+        # if ρs[i] == 0 
+        #     ratio[i, :, :] .= Inf
+        #     raw[i, :, :] .= Inf
+        # end
+        tmp0 = data0[i][:, [1; 3]]
+        tmp0[tmp0 .== 0] .= 0.1
+        tmp1 = data1[i][:, [1; 3]]
+        tmp1[tmp1 .== 0] .= 0.1
+        # ratio[i, 1, :] = Statistics.quantile(log2.(tmp0[:, 1] ./ ρs[i]), qs)
+        # ratio[i, 2, :] = Statistics.quantile(log2.(tmp0[:, 2] ./ ρs[i]), qs)
+        # ratio[i, 3, :] = Statistics.quantile(log2.(tmp1[:, 1] ./ ρs[i]), qs)
+        # ratio[i, 4, :] = Statistics.quantile(log2.(tmp1[:, 2] ./ ρs[i]), qs)
+        raw[i, 1, :] = Statistics.quantile(tmp0[:, 1], qs)
+        raw[i, 2, :] = Statistics.quantile(tmp0[:, 2], qs)
+        raw[i, 3, :] = Statistics.quantile(tmp1[:, 1], qs)
+        raw[i, 4, :] = Statistics.quantile(tmp1[:, 2], qs)
     end
 end
 # ratio[ratio .== -Inf] .= minimum(ratio[ratio .!= -Inf])
@@ -65,23 +71,47 @@ ratioplot = function(i, j)
         xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
         linecolor = false,
         label = false, grid = false)
+    plot!(ρs, ratio[:, k, 2], c = :black, 
+        linewidth = 1.2, label = false)
     hline!([0], c = :red, alpha = 0.7, label = false)
     plot!(ρs, log2.(maxρ ./ ρs), 
         linestyle = :dash, color = "#29a0c8", label = false)
     plot!(ρs, log2.(dρ ./ ρs), 
         linestyle = :dash, color = "#29a0c8", label = false)
-    plot!(ρs, ratio[:, k, 2], c = :black, 
+end
+
+rawplot = function(i, j)
+    k = 2(i - 1) + j
+    part1 = i == 1 ? "constant data" : "varying data"
+    part2 = j == 1 ? "constant model" : "varying model"
+    plot(ρs, raw[:, k, 1], fillrange = raw[:, k, 3], 
+        xlabel = "recombination rate", ylabel = "estimate",
+        title = "$part1, $part2",
+        xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
+        linecolor = false,
+        label = false, grid = false)
+    plot!(ρs, maxρ * ones(nρ),
+        linestyle = :dash, color = "#29a0c8", label = false)
+    plot!(ρs, zeros(nρ), 
+        linestyle = :dash, color = "#29a0c8", label = false)
+    plot!(ρs, raw[:, k, 2], c = :black, 
         linewidth = 1.2, label = false)
+    plot!([0, maxρ], [0, maxρ], 
+        color = :red, label = false)
 end
 
 aicplot(1)
 aicplot(2)
 
-ratioplot(1, 1)
-ratioplot(1, 2)
-ratioplot(2, 1)
-ratioplot(2, 2)
+rawplot(1, 1)
+rawplot(1, 2)
+rawplot(2, 1)
+rawplot(2, 2)
 
+# ratioplot(1, 1)
+# ratioplot(1, 2)
+# ratioplot(2, 1)
+# ratioplot(2, 2)
 
 # LD plots
 
