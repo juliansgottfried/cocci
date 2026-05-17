@@ -95,7 +95,7 @@ filtered %>%
 # smooth rodent data
 rodents <- read_csv("rodent_data/rodents.csv")
 sp <- colnames(rodents)[2:ncol(rodents)]
-rodents$time <- rodents$time / mean(scales)
+rodents$time <- rodents$time / scales[2]
 nsp <- ncol(rodents) - 1
 dt <- 0.01
 mintime <- ceiling(min(rodents$time) / dt) * dt
@@ -119,4 +119,4 @@ newdata %>%
     xlim(0, 3) +
     facet_wrap(~species, ncol = 1) +
     theme_classic()
-write_csv(newdata %>% select(time, stephensi_chartreuse), col_names = F, "rodent_data/covariate.csv")
+write_csv(newdata %>% select(time, all), col_names = F, "rodent_data/covariate.csv")
