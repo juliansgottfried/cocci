@@ -4,4 +4,5 @@ output
 genomic_data
 rodent_data
 sampling_data
+.DS_Store
 !rodent_data/covariate.csv
