@@ -23,8 +23,8 @@ raw = zeros(Float64, nρ, 4, 3)
 qs = [0.055, 0.5, 0.945]
 for i in 1:nρ
     if skip[i] 
-        aic[i, :, :] .= -Inf
-        raw[i, :, :] .= -Inf
+        aic[i, :, :] .= Inf
+        raw[i, :, :] .= Inf
     else
         aic[i, 1, :] = Statistics.quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
         aic[i, 2, :] = Statistics.quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
@@ -39,11 +39,15 @@ for i in 1:nρ
     end
 end
 
-aicplot = function(i)
-    plot(ρs, aic[:, i, 1], fillrange = aic[:, i, 3], 
+aicplot = function(i, lbound, rbound)
+    ploterror = aic[:, i, :]
+    ploterror[ploterror .< lbound] .= lbound
+    ploterror[ploterror .> rbound] .= rbound
+    plot(ρs, ploterror[:, 1], fillrange = ploterror[:, 3], 
         xlabel = "recombination rate", ylabel = "Δ AIC",
         title = i == 1 ? "constant data" : "varying data",
-        xlim = [0, maxρ], fillalpha = 0.15, c = "#29a0c8",
+        xlim = [0, maxρ], ylim = [lbound, rbound],
+        fillalpha = 0.15, c = "#29a0c8",
         linecolor = false, label = false, grid = false)
     hline!([2], c = :red, alpha = 0.7, label = false)
     plot!(ρs, aic[:, i, 2], c = :black, linewidth = 1.2, label = false)
@@ -69,8 +73,8 @@ rawplot = function(i, j)
         color = :red, label = false)
 end
 
-aicplot(1)
-aicplot(2)
+aicplot(1, -100, 100)
+aicplot(2, -100, 100)
 
 rawplot(1, 1)
 rawplot(1, 2)

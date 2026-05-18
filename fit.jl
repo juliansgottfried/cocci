@@ -4,13 +4,13 @@ import StatsBase, StatsPlots
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 0.1
-maxρ = 20 - dρ
+dρ = 1
+maxρ = 100 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_h", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_h", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -19,8 +19,8 @@ covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
-nsample = 10
-window = 100
+nsample = 50
+window = 1000
 nwindow = maximum(alleles[:, end]) - window
 
 S = 100
