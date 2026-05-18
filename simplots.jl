@@ -28,6 +28,9 @@ for i in 1:nρ
     else
         aic[i, 1, :] = Statistics.quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
         aic[i, 2, :] = Statistics.quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
+
+        # aic[i, 1, 2] = Statistics.mean(2(data0[i][:, 2] - data0[i][:, 4]))
+        # aic[i, 2, 2] = Statistics.mean(2(data1[i][:, 4] - data1[i][:, 2]))
        
         raw[i, 1, :] = Statistics.quantile(data0[i][:, 1], qs)
         raw[i, 2, :] = Statistics.quantile(data0[i][:, 3], qs)
