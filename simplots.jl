@@ -31,7 +31,7 @@ for i in 1:nρ
 
         # aic[i, 1, 2] = Statistics.mean(2(data0[i][:, 2] - data0[i][:, 4]))
         # aic[i, 2, 2] = Statistics.mean(2(data1[i][:, 4] - data1[i][:, 2]))
-       
+
         raw[i, 1, :] = Statistics.quantile(data0[i][:, 1], qs)
         raw[i, 2, :] = Statistics.quantile(data0[i][:, 3], qs)
         raw[i, 3, :] = Statistics.quantile(data1[i][:, 1], qs)
