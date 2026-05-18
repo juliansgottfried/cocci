@@ -23,7 +23,7 @@ nsample = 25
 window = 500
 nwindow = maximum(alleles[:, end]) - window
 
-S = 1000
+S = 100
 ρhat = zeros(Float64, S, 4)
 for i in 1:S
     subset = falses(nloci)
@@ -55,18 +55,15 @@ for i in 1:S
     ρhat[i, :] = [bestρ0; lik0; bestρ1; lik1]
 end
 
+aic = 2sum(ρhat[:, [2; 4]], dims = 1)[1, :]
+bestmodel = argmin(aic)
+exp((AICmin − AICi)/2)
+
 StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
 vline!([2], c = :red, alpha = 0.7, label = false)
 
-histogram(ρhat[:, 3], linecolor = :white, color = :black,
-     bins = Int(floor(maxρ + 1) / 4), label = false, grid = false)
-
-#= boxplot(ρhat[:, [1;3]],
-    color = :white, whisker_width = 0.2, outliers = false,
-    xticks = false, label = false, grid = false)
+nbins = Int(floor(maxρ + 1) / 1)
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
-    bins = Int(floor(maxρ + 1) / 4), label = false, grid = false) =#
-
-@time generate.repeated(collect0, collect1, pseudo0, pseudo1,
-			n, 25, 5, 10, dρ, maxρ,
-			50, 0, covariate, 1)
+    bins = nbins, label = false, grid = false)
+histogram(ρhat[:, 3], linecolor = :white, color = :black,
+    bins = nbins, label = false, grid = false)
