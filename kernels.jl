@@ -27,11 +27,11 @@ getprobs = function(maxbrk)
 end
 
 segfreq = function(G, η, maxbrk, probs)
-    freq = [1; zeros(maxbrk - 1)]
+    freq = [1; zeros(maxbrk)]
     for i in 1:G
         pairs = freq * freq'
         freq *= η
-        for j in 1:(maxbrk - 1)
+        for j in 1:maxbrk
             freq[j + 1] += (1 - η) * sum(probs[:, :, j] .* pairs)
         end
         freq ./= sum(freq)
@@ -40,11 +40,11 @@ segfreq = function(G, η, maxbrk, probs)
 end
 
 getkernels = function(G, ηs, maxbrk)
-    probs = getprobs(maxbrk)
+    probs = getprobs(maxbrk + 1)
     nη = length(ηs)
     out = [segfreq(G, η, maxbrk, probs) for η in ηs]
     out = reduce(hcat, out)[:, nη:-1:1]
-    kernels = out[2:maxbrk, :]
+    kernels = out[2:(maxbrk + 1), :]
     for i in 1:nη
         kernels[:, i] ./= sum(kernels[:, i])
     end

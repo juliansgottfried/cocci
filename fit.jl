@@ -3,6 +3,7 @@ import StatsBase, StatsPlots, Distributions
 
 include("estimate.jl")
 include("generate.jl")
+include("kernels.jl")
 
 logsumexp = function(x)
     xmax = maximum(x)
@@ -11,6 +12,7 @@ end
 
 dρ = 0.1
 maxρ = 100 - dρ
+nρ = length(0:dρ:maxρ)
 
 n = 17
 
@@ -24,10 +26,22 @@ pseudo = min(pseudo0, pseudo1)
 covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
-nloci = size(alleles)[1]
+chunksize = Int(floor(maximum(alleles[:, end]) / 20))
+chunkidx = 2580020
+chunkloci = (alleles[:, end] .>= chunkidx) .& (alleles[:, end] .<= chunkidx + chunksize)
+chunk = alleles[chunkloci, :]
+chunk[:, end] .-= minimum(chunk[:, end]) - 1
+
+nloci = size(chunk)[1]
 nsample = 25
-window = 5000
-nwindow = maximum(alleles[:, end]) - window
+window = 400000
+nwindow = chunksize - window
+
+# G = 365
+# η = 0.95
+# maxbrk = 50
+# pvec = kernels.getkernels(G, η, maxbrk)
+pvec = 1
 
 S = 500
 ρhat = zeros(Float64, S, 8)
@@ -36,10 +50,10 @@ for i in 1:S
     println(i)
     while sum(subset) < nsample
         windowidx = StatsBase.sample((1:nwindow), 1)[1]
-        subset = (alleles[:, end] .>= windowidx) .& (alleles[:, end] .<= windowidx + window)
+        subset = (chunk[:, end] .>= windowidx) .& (chunk[:, end] .<= windowidx + window)
     end
     sampleidx = StatsBase.sample((1:nloci)[subset], nsample, replace = false)
-    samples = alleles[sampleidx, :]
+    samples = chunk[sampleidx, :]
 
     configs = zeros(Int, Int(nsample * (nsample - 1) / 2), 3)
     dists = zeros(Float64, size(configs)[1])
@@ -51,7 +65,7 @@ for i in 1:S
         end
     end
     loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo, pseudo,
-            dρ, maxρ, configs, dists)
+            dρ, maxρ, configs, dists, pvec)
 
     ρhat[i, 5:6] = [loglik0[1]; logsumexp(loglik0[2:end])]
     ρhat[i, 7:8] = [loglik1[1]; logsumexp(loglik1[2:end])]
@@ -74,9 +88,9 @@ vline!([2], c = :red, alpha = 0.7, label = false)
 
 rate1 = sum((aic .> 0)) / J
 diff = quantile(aic, 0.5)
-pass = diff > 2
+pass = abs(diff) > 2
 
-nbins = Int(floor((maxρ + 1) / 1))
+nbins = Int(floor(nρ / 10))
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
     xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
@@ -87,40 +101,37 @@ histogram(ρhat[:, 3], linecolor = :white, color = :black,
 
 # p-value
 
-simdρ = 0.1
-simmaxρ = 20 - simdρ
-simnρ = length(0:simdρ:simmaxρ)
-ρs = 0:simdρ:simmaxρ
+fauxdρ = 0.1
+fauxmaxρ = 20 - fauxdρ
+fauxnρ = length(0:fauxdρ:fauxmaxρ)
+fauxρs = 0:fauxdρ:fauxmaxρ
 J = 500
-data1 = [load_object(generate.getfilenamelocal("data", "5_17_26_d", false, ρ)) for ρ in ρs]
+faux = [load_object(generate.getfilenamelocal("data", "5_17_26_d", false, ρ)) for ρ in ρs]
 
 getp = function(input, ρs, J)
     counts = round.(sort(input), sigdigits = 3)
     p = [sum(counts .== ρ) / J for ρ in ρs]
 end
 
-counts0 = data1[1][:, 3]
+counts0 = faux[1][:, 3]
 p0 = getp(counts0, ρs, J)
-# p0[p0 .== 0] .= minimum(p0[p0 .> 0]) / 10
-# p0 ./= sum(p0)
-
 p0smooth = copy(p0)
-for i in 2:(nρ - 1)
+for i in 2:(fauxnρ - 1)
     p0smooth[i] = sum(p0[(i - 1):(i + 1)]) / 3
 end
 p0smooth[p0smooth .== 0] .= minimum(p0smooth[p0smooth .> 0]) / 10
 p0smooth ./= sum(p0smooth)
 
-pc0 = zeros(nρ)
-for i in 2:nρ
+pc0 = zeros(fauxnρ)
+for i in 2:fauxnρ
     countsc0 = data1[i][:, 3]
-    pc0 .+= getp(countsc0, ρs, J) ./ (nρ - 1)
+    pc0 .+= getp(countsc0, ρs, J) ./ (fauxnρ - 1)
 end
 pc0[pc0 .== 0] .= minimum(pc0[pc0 .> 0]) / 10
 pc0 ./= sum(pc0)
 
-ll0 = StatsBase.mean(ρhat[:, 7])
-llc0 = StatsBase.mean(ρhat[:, 8])
+ll0 = sum(ρhat[:, 7]) / J
+llc0 = sum(ρhat[:, 8]) / J
 
 obs = round.(ρhat[:, 3], sigdigits = 3)
 obs = obs[obs .<= simmaxρ]
@@ -135,7 +146,3 @@ lpdfc0 = Distributions.logpdf(distrc0, table)
 
 lpvalue = lpdf0 + ll0 - (lpdf0 + ll0 + log(1 + exp(lpdfc0 + llc0 - lpdf0 - ll0)))
 pvalue = exp(lpvalue)
-
-
-# now - do the kernel fitting
-# no p-value, bc can't fit all that many

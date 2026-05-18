@@ -275,21 +275,25 @@ getconfig = function(input)
     push!(config, sum(input[1, :] .& input[2, :]))
 end
 
-getconfigs = function(n, l1, ρ0, ρ1, covariate, θ, pvec)
+getconfigs = function(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
     contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, θ, pvec)
-
     loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
-    subset = contains[loci, :]
+    while length(loci) < nsample
+        contains, allmutations = generatemut(n, l1, ρ0, ρ1, covariate, θ, pvec)
+        loci = (1:size(allmutations)[1])[0 .< sum(contains, dims = 2) .< n]
+    end
 
-    nloci = size(loci)[1]
-    configs = zeros(Int, Int(nloci * (nloci - 1) / 2), 3)
+    sampledloci = StatsBase.sample(loci, nsample, replace = false)
+    subset = contains[sampledloci, :]
+
+    configs = zeros(Int, Int(nsample * (nsample - 1) / 2), 3)
     dists = zeros(Float64, size(configs)[1])
 
-    for i in 2:nloci
+    for i in 2:nsample
         for j in 1:(i - 1)
             c = Int((i * (i - 3)) / 2 + 1 + j)
             configs[c, :] = getconfig(subset[[i; j], :])
-            dists[c] = abs(allmutations[loci[i]] - allmutations[loci[j]])
+            dists[c] = abs(allmutations[sampledloci[i]] - allmutations[sampledloci[j]])
         end
     end
 
@@ -297,17 +301,17 @@ getconfigs = function(n, l1, ρ0, ρ1, covariate, θ, pvec)
 end
 
 repeated = function(collect0, collect1, pseudo0, pseudo1,
-			n, l1, θ, J, dρ, maxρ,
+			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
     ρhat = zeros(Float64, J, 4)
     for j in 1:J
         println("sample $(j)")
-        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
         while length(configs) == 0
-            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
         end
         loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
-            dρ, maxρ, configs, dists)
+            dρ, maxρ, configs, dists, pvec)
         idx0 = argmax(loglik0)
         idx1 = argmax(loglik1)
         lik0 = maximum(loglik0)

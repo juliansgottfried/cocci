@@ -219,7 +219,11 @@ getstore = function(collect, nρ, config, pseudo)
 	store
 end
 
-getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists)
+convertdist = function(dist, pvec)
+    1 - sum(pvec .* (1 - dist) .^ (1:length(pvec)))
+end
+
+getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists, pvec)
     nρ = length(0:dρ:maxρ)
     
     loglik = zeros(Float64, nρ)
@@ -237,7 +241,8 @@ getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists)
             store = getstore(collect, nρ, currentconfig, pseudo)
         end
 
-        relocate = Int.(div.((0:dρ:maxρ) .* sorteddists[i], dρ)) .+ 1
+        effdist = convertdist(sorteddists[i], pvec)
+        relocate = Int.(div.((0:dρ:maxρ) .* effdist, dρ)) .+ 1
         loglik .+=  log.(store[relocate] ./ denom[relocate])
     end
 
@@ -245,9 +250,9 @@ getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists)
 end
 
 getl = function(n, collect0, collect1, pseudo0, pseudo1,
-            dρ, maxρ, configs, dists)
-    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, maxρ, configs, dists)
-    loglik1 = getlsubtask(n, collect1, pseudo1, dρ, maxρ, configs, dists)
+            dρ, maxρ, configs, dists, pvec)
+    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, maxρ, configs, dists, pvec)
+    loglik1 = getlsubtask(n, collect1, pseudo1, dρ, maxρ, configs, dists, pvec)
     (loglik0, loglik1)
 end
 
