@@ -2,7 +2,7 @@ ml julia
 
 sbatch \
     --nodes=5 \
-    --ntasks-per-node=20 \
+    --ntasks-per-node=10 \
     --mem=25G \
     --time=05:00:00 \
     --output=/scratch/users/jgottf/cocci/output/%j.out \

@@ -1,3 +1,3 @@
 scp -r \
-	jgottf@login.sherlock.stanford.edu:/scratch/users/jgottf/cocci/prob/run_5_17_26_h/* \
-	prob/run_5_17_26_h
+	jgottf@login.sherlock.stanford.edu:/scratch/users/jgottf/cocci/data/run_5_18_26_a/* \
+	data/run_5_18_26_a
