@@ -19,8 +19,8 @@ covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
-nsample = 25
-window = 500
+nsample = 10
+window = 100
 nwindow = maximum(alleles[:, end]) - window
 
 S = 100
@@ -56,8 +56,8 @@ for i in 1:S
 end
 
 aic = 2sum(ρhat[:, [2; 4]], dims = 1)[1, :]
-bestmodel = argmin(aic)
-exp((AICmin − AICi)/2)
+best = argmin(aic)
+pass = aic[argmax(aic)] - aic[best] > 2
 
 StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
 vline!([2], c = :red, alpha = 0.7, label = false)
