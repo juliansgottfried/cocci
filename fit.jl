@@ -5,12 +5,12 @@ include("estimate.jl")
 include("generate.jl")
 
 dρ = 0.1
-maxρ = 10 - dρ
+maxρ = 20 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_a", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_c", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -66,3 +66,7 @@ histogram(ρhat[:, 3], linecolor = :white, color = :black,
     xticks = false, label = false, grid = false)
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
     bins = Int(floor(maxρ + 1) / 4), label = false, grid = false) =#
+
+@time generate.repeated(collect0, collect1, pseudo0, pseudo1,
+			n, 25, 5, 10, dρ, maxρ,
+			50, 0, covariate, 1)
