@@ -13,7 +13,7 @@ addprocs(SlurmManager())
 @everywhere J = 500
 
 @everywhere dρ = 1
-@everywhere maxρ = 50 - dρ
+@everywhere maxρ = 25 - dρ
 @everywhere nρ = length(0:dρ:maxρ)
 
 @everywhere covariate = readdlm("/scratch/users/jgottf/cocci/rodent_data/covariate.csv", ',', Any, '\n')

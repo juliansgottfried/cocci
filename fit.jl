@@ -25,7 +25,7 @@ window = 500
 nwindow = maximum(alleles[:, end]) - window
 
 S = 1000
-ρhat = zeros(Float64, S, 4)
+ρhat = zeros(Float64, S, 8)
 for i in 1:S
     subset = falses(nloci)
     println(i)
@@ -47,13 +47,17 @@ for i in 1:S
     end
     loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo, pseudo,
             dρ, maxρ, configs, dists)
+
+    ρhat[i, 5:6] = [loglik0[1]; sum(loglik0[2:end])]
+    ρhat[i, 7:8] = [loglik1[1]; sum(loglik1[2:end])]
+    
     idx0 = argmax(loglik0)
     idx1 = argmax(loglik1)
     lik0 = maximum(loglik0)
     lik1 = maximum(loglik1)
     bestρ0 = dρ * (idx0 - 1)
     bestρ1 = dρ * (idx1 - 1)
-    ρhat[i, :] = [bestρ0; lik0; bestρ1; lik1]
+    ρhat[i, 1:4] = [bestρ0; lik0; bestρ1; lik1]
 end
 
 aic = -2sum(ρhat[:, [2; 4]], dims = 1)[1, :]
@@ -63,10 +67,18 @@ pass = aic[argmax(aic)] - aic[best] > 2
 # StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
 # vline!([2], c = :red, alpha = 0.7, label = false)
 
-nbins = Int(floor(maxρ + 1) / 4)
+nbins = Int(floor((maxρ + 1) / 2))
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
     xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
 histogram(ρhat[:, 3], linecolor = :white, color = :black,
     xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
+
+# P(0 | rho_hat distr) =
+# P(rho_hat dist | 0) * L(0)
+# divided by
+# P(rho_hat dist | 0) * L(0) + P(rho_hat dist | >0) * L(>0)
+
+StatsBase.mean(ρhat[:, 7])
+StatsBase.mean(ρhat[:, 8])
