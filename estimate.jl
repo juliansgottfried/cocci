@@ -61,6 +61,7 @@ targetf = function(K, ρ0, ρ1, next, covariate, dt, time)
     0.5K * (K - 1 + ρ0 + ρ1 * getvalue(covariate, dt, next)) * exp(Λ(K, ρ0, ρ1, time, covariate, dt) - Λ(K, ρ0, ρ1, next, covariate, dt))
 end
 
+# https://plcrodrigues.github.io/posts/rejection-sampling/
 M = function(λ, K, ρ1, covariate, dt, time)
     (λ + 0.5K * ρ1 * getvalue(covariate, dt, time)) / λ
 end
