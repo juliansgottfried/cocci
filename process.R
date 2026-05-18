@@ -66,21 +66,18 @@ getconst <- function(i) {
 }
 apply(sapply(1:8, getconst), 1, sum)
 
-# estimate Ne
-mu_bp <- 10^(-10)
-
-L <- 28.9 * 10^6
-mu <- mu_bp*L
-Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
+# estimate scale
+mu_bp_gen <- 10^(-10)
+mu_bp_yr <- 1.08 * 10^(-9)
+# L <- 28.9 * 10^6
+# mu <- mu_bp_gen*L
+# Ne <- (nrow(genotypes)/(2*sum(1/(1:(n-1)))))/mu
 Ne <- 10^7
-
-# estimate gen time in years
-tmrca <- 2.85*10^(-5)
-bounds <- c(1500, 5500)
-gs <- bounds * mu_bp / tmrca
-
-# get the scaling!
-scales <- Ne*gs
+g <- mu_bp_gen / mu_bp_yr
+# bounds <- c(1500, 5500)
+# tmrca <- 2.85*10^(-5)
+# g <- bounds * mu_bp_gen / tmrca
+scale <- Ne*g
 
 # write data
 chrom <- genotypes$Chromosome %>% table %>% which.max %>% names
@@ -93,7 +90,7 @@ filtered %>%
 # smooth rodent data
 rodents <- read_csv("rodent_data/rodents.csv")
 sp <- colnames(rodents)[2:ncol(rodents)]
-rodents$time <- rodents$time / scales[2]
+rodents$time <- rodents$time / scale
 nsp <- ncol(rodents) - 1
 dt <- 0.01
 mintime <- ceiling(min(rodents$time) / dt) * dt
@@ -114,7 +111,6 @@ newdata %>%
     ggplot(aes(x = time, y = Ne)) +
     geom_line() +
     ylim(0, 1) +
-    xlim(0, 3) +
     facet_wrap(~species, ncol = 1) +
     theme_classic()
-write_csv(newdata %>% select(time, stephensi_chartreuse), col_names = F, "rodent_data/covariate.csv")
+write_csv(newdata %>% select(time, all), col_names = F, "rodent_data/covariate.csv")

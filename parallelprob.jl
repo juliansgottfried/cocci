@@ -36,7 +36,7 @@ end =#
 pmap((nρ + 1):2nρ) do i
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	filename = generate.getfilename("prob", "5_17_26_b", isρ0, ρ)
+	filename = generate.getfilename("prob", "5_17_26_c", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
 		results = estimate.montecarlo(n, l1, m, isρ0 * ρ, !isρ0 * ρ, covariate)
