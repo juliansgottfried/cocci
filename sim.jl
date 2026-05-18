@@ -8,6 +8,7 @@ dρ = 0.1
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
+J = 500
 
 # Retrodiction plots
 
@@ -18,6 +19,7 @@ data1 = [loadit(generate.getfilenamelocal("data", "5_18_26_d", false, ρ)) for �
 skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
+rate = zeros(Float64, nρ, 2)
 raw = zeros(Float64, nρ, 4, 3)
 qs = [0.055, 0.5, 0.945]
 for i in 1:nρ
@@ -25,11 +27,14 @@ for i in 1:nρ
         aic[i, :, :] .= Inf
         raw[i, :, :] .= Inf
     else
-        aic[i, 1, :] = quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
-        aic[i, 2, :] = quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
-        # aic[i, 1, 2] = sum(2(data0[i][:, 2] - data0[i][:, 4])) / J
-        # aic[i, 2, 2] = sum(2(data1[i][:, 4] - data1[i][:, 2])) / J
+        comp0 = -2(data0[i][:, 4] - data0[i][:, 2])
+        comp1 = -2(data1[i][:, 2] - data1[i][:, 4])
+        aic[i, 1, :] = quantile(comp0, qs)
+        aic[i, 2, :] = quantile(comp1, qs)
 
+        rate[i, 1] = sum(comp0 .> 0) / J
+        rate[i, 2] = sum(comp1 .> 0) / J
+        
         raw[i, 1, :] = quantile(data0[i][:, 1], qs)
         raw[i, 2, :] = quantile(data0[i][:, 3], qs)
         raw[i, 3, :] = quantile(data1[i][:, 1], qs)
@@ -49,6 +54,16 @@ aicplot = function(i, lbound, rbound)
         linecolor = false, label = false, grid = false)
     hline!([2], c = :red, alpha = 0.7, label = false)
     plot!(ρs, aic[:, i, 2], c = :black, linewidth = 1.2, label = false)
+end
+
+rateplot = function(i)
+    plot(ρs, rate[:, i],
+        xlabel = "recombination rate", ylabel = "accuracy",
+        title = i == 1 ? "constant data" : "varying data",
+        xlim = [0, maxρ], ylim = [0, 1],
+        color = :black, linewidth = 1.2,
+        label = false, grid = false)
+    hline!([0.5], c = :red, alpha = 0.7, label = false)
 end
 
 rawplot = function(i, j)
@@ -71,8 +86,11 @@ rawplot = function(i, j)
         color = :red, label = false)
 end
 
-aicplot(1, -100, 100)
-aicplot(2, -100, 100)
+aicplot(1, -50, 50)
+aicplot(2, -50, 50)
+
+rateplot(1)
+rateplot(2)
 
 rawplot(1, 1)
 rawplot(1, 2)

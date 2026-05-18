@@ -13,11 +13,12 @@ end
 dρ = 0.1
 maxρ = 100 - dρ
 nρ = length(0:dρ:maxρ)
+ρs = 0:dρ:maxρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in ρs]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", false, ρ)) for ρ in ρs]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -33,14 +34,14 @@ chunk = alleles[chunkloci, :]
 chunk[:, end] .-= minimum(chunk[:, end]) - 1
 
 nloci = size(chunk)[1]
-nsample = 25
+nsample = 50
 window = 400000
 nwindow = chunksize - window
 
-# G = 365
-# η = 0.95
-# maxbrk = 50
-# pvec = kernels.getkernels(G, η, maxbrk)
+#= G = 365
+η = 0.95
+maxbrk = 50
+pvec = kernels.getkernels(G, η, maxbrk) =#
 pvec = 1
 
 S = 500
@@ -90,13 +91,17 @@ rate1 = sum((aic .> 0)) / J
 diff = quantile(aic, 0.5)
 pass = abs(diff) > 2
 
-nbins = Int(floor(nρ / 10))
+# quantile(ρhat[:, 1], 0.5)
+
+nbins = Int.(floor.(nρ ./ 50))
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
-    xlabel = "recombination rate", ylabel = "count",
-    bins = nbins, label = false, grid = false)
+    xlabel = "recombination rate", ylabel = "density",
+    xlim = [0, maxρ], normalize = true, bins = nbins,
+    label = false, grid = false)
 histogram(ρhat[:, 3], linecolor = :white, color = :black,
-    xlabel = "recombination rate", ylabel = "count",
-    bins = nbins, label = false, grid = false)
+    xlabel = "recombination rate", ylabel = "density",
+    xlim = [0, maxρ], normalize = true, bins = nbins,
+    label = false, grid = false)
 
 
 # p-value
@@ -106,11 +111,11 @@ fauxmaxρ = 20 - fauxdρ
 fauxnρ = length(0:fauxdρ:fauxmaxρ)
 fauxρs = 0:fauxdρ:fauxmaxρ
 J = 500
-faux = [load_object(generate.getfilenamelocal("data", "5_17_26_d", false, ρ)) for ρ in ρs]
+faux = [load_object(generate.getfilenamelocal("data", "5_18_26_d", false, ρ)) for ρ in ρs]
 
 getp = function(input, ρs, J)
     counts = round.(sort(input), sigdigits = 3)
-    p = [sum(counts .== ρ) / J for ρ in ρs]
+    [sum(counts .== ρ) / J for ρ in ρs]
 end
 
 counts0 = faux[1][:, 3]
