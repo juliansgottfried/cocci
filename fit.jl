@@ -80,5 +80,5 @@ histogram(ρhat[:, 3], linecolor = :white, color = :black,
 # divided by
 # P(rho_hat dist | 0) * L(0) + P(rho_hat dist | >0) * L(>0)
 
-StatsBase.mean(ρhat[:, 7])
+ll0 = StatsBase.mean(ρhat[:, 7])
 StatsBase.mean(ρhat[:, 8])
