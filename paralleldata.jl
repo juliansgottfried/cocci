@@ -9,11 +9,11 @@ addprocs(SlurmManager())
 
 @everywhere n = 17
 @everywhere l1 = 25
-# @everywhere θ = 20
+@everywhere θ = 5
 @everywhere J = 500
 
-@everywhere dρ = 0.1
-@everywhere maxρ = 20 - dρ
+@everywhere dρ = 1
+@everywhere maxρ = 50 - dρ
 @everywhere nρ = length(0:dρ:maxρ)
 
 @everywhere covariate = readdlm("/scratch/users/jgottf/cocci/rodent_data/covariate.csv", ',', Any, '\n')
@@ -25,11 +25,12 @@ addprocs(SlurmManager())
 
 @everywhere pvec = 1
 
-@everywhere collect0 = [load_object(generate.getfilename("prob", "5_17_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
-@everywhere collect1 = [load_object(generate.getfilename("prob", "5_17_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
+@everywhere collect0 = [load_object(generate.getfilename("prob", "5_17_26_h", true, ρ)) for ρ in 0:dρ:maxρ]
+@everywhere collect1 = [load_object(generate.getfilename("prob", "5_17_26_h", false, ρ)) for ρ in 0:dρ:maxρ]
 
 @everywhere pseudo0 = estimate.getpseudo(collect0, n)
 @everywhere pseudo1 = estimate.getpseudo(collect1, n)
+@everywhere pseudo = min(pseudo0, pseudo1)
 
 pmap(1:2nρ) do i
 	# idx1 = div(i - 1, nρ) + 1
@@ -38,11 +39,11 @@ pmap(1:2nρ) do i
 	# ρ1 = dρ * (idx2 - 1)
 	ρ = (0:dρ:maxρ)[mod(i - 1, nρ) + 1]
 	isρ0 = i <= nρ
-	θ = ρ + dρ
-	filename = generate.getfilename("data", "5_17_26_g", isρ0, ρ)
+	# θ = ρ + dρ
+	filename = generate.getfilename("data", "5_18_26_a", isρ0, ρ)
 	if !isfile(filename)
 		println("ρ: $ρ, ρ0: $isρ0")
-		ρhat = generate.repeated(collect0, collect1, pseudo0, pseudo1,
+		ρhat = generate.repeated(collect0, collect1, pseudo, pseudo,
 			n, l1, θ, J, dρ, maxρ,
 			isρ0 * ρ, !isρ0 * ρ, covariate, pvec)
 		save_object(filename, ρhat)

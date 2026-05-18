@@ -14,16 +14,17 @@ collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_h", false, ρ
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
+pseudo = min(pseudo0, pseudo1)
 
 covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
-nsample = 50
-window = 1000
+nsample = 25
+window = 500
 nwindow = maximum(alleles[:, end]) - window
 
-S = 100
+S = 1000
 ρhat = zeros(Float64, S, 4)
 for i in 1:S
     subset = falses(nloci)
@@ -44,7 +45,7 @@ for i in 1:S
             dists[c] = abs(samples[i, end] - samples[j, end]) / window
         end
     end
-    loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
+    loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo, pseudo,
             dρ, maxρ, configs, dists)
     idx0 = argmax(loglik0)
     idx1 = argmax(loglik1)
@@ -55,15 +56,17 @@ for i in 1:S
     ρhat[i, :] = [bestρ0; lik0; bestρ1; lik1]
 end
 
-aic = 2sum(ρhat[:, [2; 4]], dims = 1)[1, :]
+aic = -2sum(ρhat[:, [2; 4]], dims = 1)[1, :]
 best = argmin(aic)
 pass = aic[argmax(aic)] - aic[best] > 2
 
-StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
-vline!([2], c = :red, alpha = 0.7, label = false)
+# StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
+# vline!([2], c = :red, alpha = 0.7, label = false)
 
-nbins = Int(floor(maxρ + 1) / 1)
+nbins = Int(floor(maxρ + 1) / 4)
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
+    xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
 histogram(ρhat[:, 3], linecolor = :white, color = :black,
+    xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
