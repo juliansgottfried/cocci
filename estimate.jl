@@ -251,7 +251,7 @@ end
 
 getl = function(n, collect0, collect1, pseudo0, pseudo1,
             dρ, maxρ, configs, dists, pvec)
-    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, maxρ, configs, dists, pvec)
+    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, maxρ, configs, dists, 1)
     loglik1 = getlsubtask(n, collect1, pseudo1, dρ, maxρ, configs, dists, pvec)
     (loglik0, loglik1)
 end

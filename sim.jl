@@ -1,4 +1,4 @@
-using Plots, JLD2, StatsBase, Statistics
+using Plots, JLD2, StatsBase
 import Distributions
 
 include("estimate.jl")
@@ -8,8 +8,6 @@ dρ = 0.1
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
-
-J = 500
 
 # Retrodiction plots
 
@@ -29,8 +27,8 @@ for i in 1:nρ
     else
         aic[i, 1, :] = quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
         aic[i, 2, :] = quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
-        # aic[i, 1, 2] = Statistics.mean(2(data0[i][:, 2] - data0[i][:, 4]))
-        # aic[i, 2, 2] = Statistics.mean(2(data1[i][:, 4] - data1[i][:, 2]))
+        # aic[i, 1, 2] = sum(2(data0[i][:, 2] - data0[i][:, 4])) / J
+        # aic[i, 2, 2] = sum(2(data1[i][:, 4] - data1[i][:, 2])) / J
 
         raw[i, 1, :] = quantile(data0[i][:, 1], qs)
         raw[i, 2, :] = quantile(data0[i][:, 3], qs)
@@ -80,40 +78,3 @@ rawplot(1, 1)
 rawplot(1, 2)
 rawplot(2, 1)
 rawplot(2, 2)
-
-
-# For Bayes
-
-getp = function(data, i, ρs, J)
-    counts = data1[i][:, 3]
-    counts = round.(sort(counts), sigdigits = 3)
-    p = [sum(counts .== ρ) / J for ρ in ρs]
-end
-
-p0 = getp(data1, 1, ρs, J)
-
-pc0 = zeros(nρ)
-for i in 2:nρ
-    pc0 .+= getp(data1, i, ρs, J) ./ (nρ - 1)
-end
-
-ll0 = mean(ρhat[:, 7])
-llc0 = mean(ρhat[:, 8])
-
-
-# P(0 | rho_hat distr) =
-# P(rho_hat dist | 0) * L(0)
-# divided by
-# P(rho_hat dist | 0) * L(0) + P(rho_hat dist | >0) * L(>0)
-
-ll0 = mean(ρhat[:, 7])
-llc0 = mean(ρhat[:, 8])
-
-# what is P(rho_hat dist | 0)
-# multinomial distribution! perfect
-
-# and P(rho_hat dist | >0) ?
-# just the average of all those
-
-# easy
-# do tomorrow!
