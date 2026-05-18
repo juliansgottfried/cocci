@@ -4,13 +4,13 @@ import StatsBase, StatsPlots
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 1
-maxρ = 100 - dρ
+dρ = 0.1
+maxρ = 10 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_16_26_b", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_16_26_b", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_a", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_c", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)

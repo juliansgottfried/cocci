@@ -9,7 +9,7 @@ addprocs(SlurmManager())
 
 @everywhere n = 17
 @everywhere l1 = 25
-@everywhere θ = 10
+@everywhere θ = 5
 @everywhere J = 500
 
 @everywhere dρ = 0.1

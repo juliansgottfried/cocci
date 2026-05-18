@@ -78,7 +78,7 @@ simulator = function(n, l1, ρ0, ρ1, covariate, pvec)
         comparison = false
         while !comparison
             next = time - log(1 - rand()) / λ
-            comparison = rand() <= estimate.targetf(K, ρ0, ρ1, next, covariate, dt, time) / (estimate.M(λ, K, ρ1, covariate, dt, time) * λ * exp(-λ * next))
+            comparison = rand() <= estimate.targetf(K, ρ0, ρ1, next, covariate, dt, time) / (estimate.M(λ, K, ρ1, covariate, dt, time) * λ * exp(-λ * (next - time)))
         end
         time = next
 
@@ -303,7 +303,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
     for j in 1:J
         println("sample $(j)")
         configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
-        while length(configs) == 0 
+        while length(configs) == 0
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, pvec)
         end
         loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,

@@ -62,7 +62,7 @@ targetf = function(K, ρ0, ρ1, next, covariate, dt, time)
 end
 
 M = function(λ, K, ρ1, covariate, dt, time)
-    (λ + 0.5K * ρ1 * getvalue(covariate, dt, time)) / (λ * exp(-λ * time))
+    (λ + 0.5K * ρ1 * getvalue(covariate, dt, time)) / λ
 end
 
 simulator = function(n, l1, ρ0, ρ1, covariate)
@@ -89,7 +89,7 @@ simulator = function(n, l1, ρ0, ρ1, covariate)
         comparison = false
         while !comparison
             next = time - log(1 - rand()) / λ
-            comparison = rand() <= targetf(K, ϕ * ρ0, ϕ * ρ1, next, covariate, dt, time) / (M(λ, K, ϕ * ρ1, covariate, dt, time) * λ * exp(-λ * next))
+            comparison = rand() <= targetf(K, ϕ * ρ0, ϕ * ρ1, next, covariate, dt, time) / (M(λ, K, ϕ * ρ1, covariate, dt, time) * λ * exp(-λ * (next - time)))
         end
         time = next
         
