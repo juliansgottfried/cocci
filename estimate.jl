@@ -211,7 +211,8 @@ getstore = function(collect, nρ, config, pseudo)
 	store = zeros(Float64, nρ)
 	for i in 1:nρ
 		extract = collect[i][config[1], config[2]]
-		store[i] = extract[2][extract[1] .== config[3]][1]
+        tmpval = extract[2][extract[1] .== config[3]]
+        if size(tmpval)[1] > 0 store[i] = tmpval[1] end
 	end
 	store .+= pseudo
 	if config[1] != config[2] store .*= 2 end

@@ -19,6 +19,7 @@ data1 = [loadit(generate.getfilenamelocal("data", "5_17_26_d", false, ρ)) for �
 skip = isnothing.(data0) .| isnothing.(data1)
 
 aic = zeros(Float64, nρ, 2, 3)
+aic2 = zeros(Float64, nρ, 2)
 raw = zeros(Float64, nρ, 4, 3)
 qs = [0.055, 0.5, 0.945]
 for i in 1:nρ
@@ -28,9 +29,11 @@ for i in 1:nρ
     else
         aic[i, 1, :] = Statistics.quantile(2(data0[i][:, 2] - data0[i][:, 4]), qs)
         aic[i, 2, :] = Statistics.quantile(2(data1[i][:, 4] - data1[i][:, 2]), qs)
-
         # aic[i, 1, 2] = Statistics.mean(2(data0[i][:, 2] - data0[i][:, 4]))
         # aic[i, 2, 2] = Statistics.mean(2(data1[i][:, 4] - data1[i][:, 2]))
+
+        aic2[i, 1] = 2sum(data0[i][:, 2] - data0[i][:, 4])
+        aic2[i, 2] = 2sum(data1[i][:, 4] - data1[i][:, 2])
 
         raw[i, 1, :] = Statistics.quantile(data0[i][:, 1], qs)
         raw[i, 2, :] = Statistics.quantile(data0[i][:, 3], qs)
@@ -51,6 +54,11 @@ aicplot = function(i, lbound, rbound)
         linecolor = false, label = false, grid = false)
     hline!([2], c = :red, alpha = 0.7, label = false)
     plot!(ρs, aic[:, i, 2], c = :black, linewidth = 1.2, label = false)
+end
+
+aic2plot = function(i)
+    plot(ρs, aic2[:, i], c = :black, linewidth = 1.2, label = false)
+    hline!([2], c = :red, alpha = 0.7, label = false)
 end
 
 rawplot = function(i, j)
@@ -75,6 +83,9 @@ end
 
 aicplot(1, -100, 100)
 aicplot(2, -100, 100)
+
+# aic2plot(1)
+# aic2plot(2)
 
 rawplot(1, 1)
 rawplot(1, 2)

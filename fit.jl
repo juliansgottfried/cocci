@@ -4,13 +4,18 @@ import StatsBase, StatsPlots
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 1
+logsumexp = function(x)
+    xmax = maximum(x)
+    xmax + log(sum(exp.(x .- xmax)))
+end
+
+dρ = 0.1
 maxρ = 100 - dρ
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_17_26_h", true, ρ)) for ρ in 0:dρ:maxρ]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_17_26_h", false, ρ)) for ρ in 0:dρ:maxρ]
+collect0 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in 0:dρ:maxρ]
+collect1 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", false, ρ)) for ρ in 0:dρ:maxρ]
 
 pseudo0 = estimate.getpseudo(collect0, n)
 pseudo1 = estimate.getpseudo(collect1, n)
@@ -21,10 +26,10 @@ alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 nloci = size(alleles)[1]
 nsample = 25
-window = 500
+window = 10000
 nwindow = maximum(alleles[:, end]) - window
 
-S = 1000
+S = 500
 ρhat = zeros(Float64, S, 8)
 for i in 1:S
     subset = falses(nloci)
@@ -48,8 +53,8 @@ for i in 1:S
     loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo, pseudo,
             dρ, maxρ, configs, dists)
 
-    ρhat[i, 5:6] = [loglik0[1]; sum(loglik0[2:end])]
-    ρhat[i, 7:8] = [loglik1[1]; sum(loglik1[2:end])]
+    ρhat[i, 5:6] = [loglik0[1]; logsumexp(loglik0[2:end])]
+    ρhat[i, 7:8] = [loglik1[1]; logsumexp(loglik1[2:end])]
     
     idx0 = argmax(loglik0)
     idx1 = argmax(loglik1)
@@ -67,7 +72,7 @@ pass = aic[argmax(aic)] - aic[best] > 2
 # StatsPlots.density(2(ρhat[:, 4] .- ρhat[:, 2]), color = :black, label = false, grid = false)
 # vline!([2], c = :red, alpha = 0.7, label = false)
 
-nbins = Int(floor((maxρ + 1) / 2))
+nbins = Int(floor((maxρ + 1) / 1))
 histogram(ρhat[:, 1], linecolor = :white, color = :black, 
     xlabel = "recombination rate", ylabel = "count",
     bins = nbins, label = false, grid = false)
@@ -81,4 +86,13 @@ histogram(ρhat[:, 3], linecolor = :white, color = :black,
 # P(rho_hat dist | 0) * L(0) + P(rho_hat dist | >0) * L(>0)
 
 ll0 = StatsBase.mean(ρhat[:, 7])
-StatsBase.mean(ρhat[:, 8])
+llc0 = StatsBase.mean(ρhat[:, 8])
+
+# what is P(rho_hat dist | 0)
+# multinomial distribution! perfect
+
+# and P(rho_hat dist | >0) ?
+# just the average of all those
+
+# easy
+# do tomorrow!
