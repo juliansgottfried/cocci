@@ -339,7 +339,7 @@ getfilename = function(type, date, isρ0, ρ)
 			"/run_",
 			date,
             isρ0 ? "/rho0/rho_" : "/rho1/rho_",
-			replace(string(ρ), "." => "-"), 
+			replace(string(1.0 * ρ), "." => "-"), 
 			".jld2"
 		)
 end
@@ -350,7 +350,34 @@ getfilenamelocal = function(type, date, isρ0, ρ)
 			"/run_",
 			date,
             isρ0 ? "/rho0/rho_" : "/rho1/rho_",
-			replace(string(ρ), "." => "-"), 
+			replace(string(1.0 * ρ), "." => "-"), 
+			".jld2"
+		)
+end
+
+getfilenamegrid = function(type, date, ρ0, ρ1)
+	string(
+			"/scratch/users/jgottf/cocci/",
+			type,
+			"/run_",
+			date,
+            "/rho0_",
+			replace(string(1.0 * ρ0), "." => "-"),
+            "_rho1_",
+            replace(string(1.0 * ρ1), "." => "-"),
+			".jld2"
+		)
+end
+
+getfilenamegridlocal = function(type, date, ρ0, ρ1)
+	string(
+			type,
+			"/run_",
+			date,
+            "/rho0_",
+			replace(string(1.0 * ρ0), "." => "-"),
+            "_rho1_",
+            replace(string(1.0 * ρ1), "." => "-"),
 			".jld2"
 		)
 end

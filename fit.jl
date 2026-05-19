@@ -38,11 +38,11 @@ nsample = 50
 window = 400000
 nwindow = chunksize - window
 
-#= G = 365
+G = 365
 η = 0.95
 maxbrk = 50
-pvec = kernels.getkernels(G, η, maxbrk) =#
-pvec = 1
+pvec = kernels.getkernels(G, η, maxbrk)
+# pvec = 1
 
 S = 500
 ρhat = zeros(Float64, S, 8)
@@ -111,7 +111,7 @@ fauxmaxρ = 20 - fauxdρ
 fauxnρ = length(0:fauxdρ:fauxmaxρ)
 fauxρs = 0:fauxdρ:fauxmaxρ
 J = 500
-faux = [load_object(generate.getfilenamelocal("data", "5_18_26_d", false, ρ)) for ρ in ρs]
+faux = [load_object(generate.getfilenamelocal("data", "5_18_26_d", false, ρ)) for ρ in fauxρs]
 
 getp = function(input, ρs, J)
     counts = round.(sort(input), sigdigits = 3)
@@ -119,7 +119,7 @@ getp = function(input, ρs, J)
 end
 
 counts0 = faux[1][:, 3]
-p0 = getp(counts0, ρs, J)
+p0 = getp(counts0, fauxρs, J)
 p0smooth = copy(p0)
 for i in 2:(fauxnρ - 1)
     p0smooth[i] = sum(p0[(i - 1):(i + 1)]) / 3
@@ -130,7 +130,7 @@ p0smooth ./= sum(p0smooth)
 pc0 = zeros(fauxnρ)
 for i in 2:fauxnρ
     countsc0 = data1[i][:, 3]
-    pc0 .+= getp(countsc0, ρs, J) ./ (fauxnρ - 1)
+    pc0 .+= getp(countsc0, fauxρs, J) ./ (fauxnρ - 1)
 end
 pc0[pc0 .== 0] .= minimum(pc0[pc0 .> 0]) / 10
 pc0 ./= sum(pc0)
@@ -141,7 +141,7 @@ llc0 = sum(ρhat[:, 8]) / J
 obs = round.(ρhat[:, 3], sigdigits = 3)
 obs = obs[obs .<= simmaxρ]
 cutJ = length(obs)
-table = Int.(round.(cutJ * getp(obs, ρs, cutJ), sigdigits = 3))
+table = Int.(round.(cutJ * getp(obs, fauxρs, cutJ), sigdigits = 3))
 
 distr0 = Distributions.Multinomial(cutJ, p0smooth)
 distrc0 = Distributions.Multinomial(cutJ, pc0)
@@ -149,5 +149,5 @@ distrc0 = Distributions.Multinomial(cutJ, pc0)
 lpdf0 = Distributions.logpdf(distr0, table)
 lpdfc0 = Distributions.logpdf(distrc0, table)
 
-lpvalue = lpdf0 + ll0 - (lpdf0 + ll0 + log(1 + exp(lpdfc0 + llc0 - lpdf0 - ll0)))
-pvalue = exp(lpvalue)
+x = lpdfc0 + llc0 - lpdf0 - ll0
+pvalue = 1 / exp(x)
