@@ -324,6 +324,27 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
     ρhat
 end
 
+repeatedgrid = function(collect, pseudo,
+			n, l1, θ, nsample, J, dρ, maxρ,
+			ρ0, ρ1, covariate, pvec)
+    ρhat = zeros(Float64, J, 3)
+    for j in 1:J
+        println("sample $(j)")
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        while length(configs) == 0
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        end
+        loglik = estimate.getlgrid(n, collect, pseudo,
+            dρ, maxρ, configs, dists, pvec)
+        idx = argmax(loglik)
+        bestρ0 = dρ * (idx[1] - 1)
+	    bestρ1 = dρ * (idx[2] - 1)
+        ρhat[j, :] = [bestρ0; bestρ1; maximum(loglik)]
+    end
+    
+    ρhat
+end
+
 buildcov = function(dt, maxtime, change)
     times = dt:dt:maxtime
     growth = sign(change) * log(abs(change)) / maxtime

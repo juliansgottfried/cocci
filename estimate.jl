@@ -219,6 +219,18 @@ getstore = function(collect, nρ, config, pseudo)
 	store
 end
 
+getstoregrid = function(collect, nρ, config, pseudo)
+	store = zeros(Float64, nρ, nρ)
+	for i in 1:nρ, j in 1:nρ
+		extract = collect[i, j][config[1], config[2]]
+        tmpval = extract[2][extract[1] .== config[3]]
+        if size(tmpval)[1] > 0 store[i, j] = tmpval[1] end
+	end
+	store .+= pseudo
+	if config[1] != config[2] store .*= 2 end
+	store
+end
+
 convertdist = function(dist, pvec)
     1 - sum(pvec .* (1 - dist) .^ (1:length(pvec)))
 end
@@ -256,34 +268,37 @@ getl = function(n, collect0, collect1, pseudo0, pseudo1,
     (loglik0, loglik1)
 end
 
-#= getl = function(ρs, n, results, configs, dists, pseudo)
-    # ρs = []
-    # for i in 1:10 push!(ρs, [0.0; i/10]) end
-    l = length(ρs)
-    loglik = zeros(Float64, l)
-    denom = zeros(Float64, l)
-    for i in 1:l denom[i] = getsum(results[i], n, pseudo) end
-    for i in 1:l
-        printlnln(i)
-        for j in 1:size(configs)[1]
-            config1 = maximum(configs[j, 1:2])
-            config2 = minimum(configs[j, 1:2])
+getlgrid = function(n, collect, pseudo,
+            dρ, maxρ, configs, dists, pvec)
+    nρ = length(0:dρ:maxρ)
+    
+    loglik = zeros(Float64, nρ, nρ)
+    denom = getsum.(collect, n, pseudo)
+    
+    sortedconfigs, sorteddists = orderconfigs(configs, dists)
 
-            a = [(ρ[1] - dists[j] * ρs[i][1]).^2 for ρ in ρs]
-            b = [(ρ[2] - dists[j] * ρs[i][2]).^2 for ρ in ρs]
-            ρidx = (1:length(ρs))[(a .== minimum(a)) .& (b .== minimum(b))][1]
+    currentconfig = [0; 0; 0]
+    store = zeros(Float64, nρ, nρ)
+    for i in 1:size(sortedconfigs)[1]
+        # println(i)
+        tmpconfig = sortedconfigs[i, :]
+        if tmpconfig != currentconfig
+            currentconfig = tmpconfig
+            store = getstoregrid(collect, nρ, currentconfig, pseudo)
+        end
 
-            extract = results[ρidx][config1, config2]
-            numer = extract[2][extract[1] .== configs[j, 3]][1] + pseudo
-            if config1 != config2 numer *= 2 end
-            qc = log(numer / denom[ρidx])
-            if !isinf(qc) loglik[i] += qc 
-            else println("uh oh") end
+        effdist0 = convertdist(sorteddists[i], 1)
+        effdist1 = convertdist(sorteddists[i], pvec)
+        relocate0 = Int.(div.((0:dρ:maxρ) .* effdist0, dρ)) .+ 1
+        relocate1 = Int.(div.((0:dρ:maxρ) .* effdist1, dρ)) .+ 1
+
+        for j in 1:nρ, k in 1:nρ
+            loglik[j, k] +=  log(store[relocate0[j], relocate1[k]] / denom[relocate0[j], relocate1[k]])
         end
     end
 
     loglik
-end =#
+end
 
 getpseudo = function(collect, n)
     pseudo = Inf
