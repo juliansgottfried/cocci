@@ -293,7 +293,7 @@ getlgrid = function(n, collect, pseudo,
         relocate1 = Int.(div.((0:dρ:maxρ) .* effdist1, dρ)) .+ 1
 
         for j in 1:nρ, k in 1:nρ
-            loglik[j, k] +=  log(store[relocate0[j], relocate1[k]] / denom[relocate0[j], relocate1[k]])
+            loglik[j, k] += log(store[relocate0[j], relocate1[k]] / denom[relocate0[j], relocate1[k]])
         end
     end
 
