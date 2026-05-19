@@ -13,8 +13,8 @@ addprocs(SlurmManager())
 @everywhere nsample = 50
 @everywhere J = 500
 
-@everywhere dρ = 1
-@everywhere maxρ = 10 - dρ
+@everywhere dρ = 0.5
+@everywhere maxρ = 20 - dρ
 @everywhere ρs = 0:dρ:maxρ
 @everywhere nρ = length(ρs)
 
@@ -29,7 +29,7 @@ addprocs(SlurmManager())
 
 # @everywhere collect0 = [load_object(generate.getfilename("prob", "5_18_26_e", true, ρ)) for ρ in ρs]
 # @everywhere collect1 = [load_object(generate.getfilename("prob", "5_18_26_e", false, ρ)) for ρ in ρs]
-@everywhere collect = [load_object(generate.getfilenamegrid("prob", "5_18_26_e", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+@everywhere collect = [load_object(generate.getfilenamegrid("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
 
 # @everywhere pseudo0 = estimate.getpseudo(collect0, n)
 # @everywhere pseudo1 = estimate.getpseudo(collect1, n)
@@ -51,7 +51,7 @@ end =#
 pmap(1:nρ^2) do i
 	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
-	filename = generate.getfilenamegrid("data", "5_18_26_e", ρ0, ρ1)
+	filename = generate.getfilenamegrid("data", "5_19_26_a", ρ0, ρ1)
 	if !isfile(filename)
 		ρhat = generate.repeatedgrid(collect, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,

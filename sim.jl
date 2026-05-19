@@ -1,5 +1,4 @@
 using Plots, JLD2, StatsBase
-import Distributions
 
 include("estimate.jl")
 include("generate.jl")
