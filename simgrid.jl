@@ -3,8 +3,8 @@ using Plots, JLD2, StatsBase
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 1
-maxρ = 10 - dρ
+dρ = 0.5
+maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
 
@@ -43,3 +43,4 @@ end
 
 plotit(1)
 plotit(2)
+

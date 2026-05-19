@@ -1,8 +1,8 @@
 ml julia
 
 sbatch \
-    --nodes=8 \
-    --ntasks-per-node=20 \
+    --nodes=5 \
+    --ntasks-per-node=17 \
     --mem=15G \
     --time=03:30:00 \
     --output=/scratch/users/jgottf/cocci/output/%j.out \

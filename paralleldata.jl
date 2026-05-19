@@ -48,7 +48,15 @@ addprocs(SlurmManager())
 	end
 end =#
 
-pmap(1:nρ^2) do i
+@everywhere keep = falses(nρ^2)
+@everywhere for i in 1:nρ^2
+	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
+	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
+	if ρ0 + ρ1 <= maxρ keep[i] = true end
+end
+@everywhere idx = (1:nρ^2)[keep]
+
+pmap(idx) do i
 	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
 	filename = generate.getfilenamegrid("data", "5_19_26_a", ρ0, ρ1)
