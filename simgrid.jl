@@ -85,3 +85,9 @@ plotheat(heat1, 2)
 # rho0 is accurately estimated for all values
 # rho1 is accurate estimated if rho0 is low
 # but if rho0 is high, it thinks that rho1 is also how
+
+
+# i mean it looks like the intercept of the rho1 estimate
+# is in fact the rho0 estimate
+# and then it goes up
+# for some reason the estimator for rho1 is actually rh0+rho1
