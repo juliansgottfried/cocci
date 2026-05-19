@@ -11,7 +11,7 @@ addprocs(SlurmManager())
 @everywhere l1 = 25
 @everywhere m = 100000
 
-@everywhere dρ = 1
+@everywhere dρ = 2
 @everywhere maxρ = 100 - dρ
 @everywhere ρs = 0:dρ:maxρ
 @everywhere nρ = length(ρs)
