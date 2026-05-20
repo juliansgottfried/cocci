@@ -348,6 +348,7 @@ end
 repeatedgridbayes = function(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
+    nρ = length(0:dρ:maxρ)
     ρhat = zeros(Float64, J, nρ, nρ)
     for j in 1:J
         println("sample $(j)")
