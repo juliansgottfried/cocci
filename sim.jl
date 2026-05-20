@@ -9,8 +9,6 @@ nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
 J = 500
 
-# Retrodiction plots
-
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
 data0 = [loadit(generate.getfilenamelocal("data", "5_18_26_d", true, ρ)) for ρ in 0:dρ:maxρ]

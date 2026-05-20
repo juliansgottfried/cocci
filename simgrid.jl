@@ -9,8 +9,6 @@ nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
 J = 500
 
-# Retrodiction plots
-
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
 data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
@@ -78,9 +76,3 @@ plotit(2)
 cutoff = 2
 plotheat(1, cutoff)
 plotheat(2, cutoff)
-
-# i mean it looks like the intercept of the rho1 estimate
-# is in fact the rho0 estimate
-# and then it goes up
-# for some reason the estimator for rho1 is actually rh0+rho1
-# if rho0 is high, why would rho1 be estimated to be high
