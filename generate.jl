@@ -345,7 +345,7 @@ repeatedgrid = function(gather, pseudo,
     ρhat
 end
 
-repeatedgridfull = function(gather, pseudo,
+repeatedgridbayes = function(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
     ρhat = zeros(Float64, J, nρ, nρ)

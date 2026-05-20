@@ -61,7 +61,7 @@ pmap(idx) do i
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
 	filename = generate.getfilenamegrid("data", "5_19_26_c", ρ0, ρ1)
 	if !isfile(filename)
-		ρhat = generate.repeatedgrid(gather, pseudo,
+		ρhat = generate.repeatedgridbayes(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
 		save_object(filename, ρhat)
