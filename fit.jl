@@ -17,11 +17,11 @@ nρ = length(0:dρ:maxρ)
 
 n = 17
 
-collect0 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in ρs]
-collect1 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", false, ρ)) for ρ in ρs]
+gather0 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in ρs]
+gather1 = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", false, ρ)) for ρ in ρs]
 
-pseudo0 = estimate.getpseudo(collect0, n)
-pseudo1 = estimate.getpseudo(collect1, n)
+pseudo0 = estimate.getpseudo(gather0, n)
+pseudo1 = estimate.getpseudo(gather1, n)
 pseudo = min(pseudo0, pseudo1)
 
 covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
@@ -65,7 +65,7 @@ for i in 1:S
             dists[c] = abs(samples[i, end] - samples[j, end]) / window
         end
     end
-    loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo, pseudo,
+    loglik0, loglik1 = estimate.getl(n, gather0, gather1, pseudo, pseudo,
             dρ, maxρ, configs, dists, pvec)
 
     ρhat[i, 5:6] = [loglik0[1]; logsumexp(loglik0[2:end])]

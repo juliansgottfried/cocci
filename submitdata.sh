@@ -3,8 +3,8 @@ ml julia
 sbatch \
     --nodes=5 \
     --ntasks-per-node=17 \
-    --mem=15G \
-    --time=03:30:00 \
+    --mem=20G \
+    --time=01:45:00 \
     --output=/scratch/users/jgottf/cocci/output/%j.out \
     --error=/scratch/users/jgottf/cocci/output/%j.out \
     --partition=normal,hns \

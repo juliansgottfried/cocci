@@ -300,7 +300,7 @@ getconfigs = function(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
     (configs, dists)
 end
 
-repeated = function(collect0, collect1, pseudo0, pseudo1,
+repeated = function(gather0, gather1, pseudo0, pseudo1,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
     ρhat = zeros(Float64, J, 4)
@@ -310,7 +310,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
         while length(configs) == 0
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
         end
-        loglik0, loglik1 = estimate.getl(n, collect0, collect1, pseudo0, pseudo1,
+        loglik0, loglik1 = estimate.getl(n, gather0, gather1, pseudo0, pseudo1,
             dρ, maxρ, configs, dists, pvec)
         idx0 = argmax(loglik0)
         idx1 = argmax(loglik1)
@@ -324,7 +324,7 @@ repeated = function(collect0, collect1, pseudo0, pseudo1,
     ρhat
 end
 
-repeatedgrid = function(collect, pseudo,
+repeatedgrid = function(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
     ρhat = zeros(Float64, J, 3)
@@ -334,7 +334,7 @@ repeatedgrid = function(collect, pseudo,
         while length(configs) == 0
             configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
         end
-        loglik = estimate.getlgrid(n, collect, pseudo,
+        loglik = estimate.getlgrid(n, gather, pseudo,
             dρ, maxρ, configs, dists, pvec)
         idx = argmax(loglik)
         bestρ0 = dρ * (idx[1] - 1)
@@ -342,6 +342,22 @@ repeatedgrid = function(collect, pseudo,
         ρhat[j, :] = [bestρ0; bestρ1; maximum(loglik)]
     end
     
+    ρhat
+end
+
+repeatedgridfull = function(gather, pseudo,
+			n, l1, θ, nsample, J, dρ, maxρ,
+			ρ0, ρ1, covariate, pvec)
+    ρhat = zeros(Float64, J, nρ, nρ)
+    for j in 1:J
+        println("sample $(j)")
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        while length(configs) == 0
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        end
+        ρhat[j, :, :] = estimate.getlgrid(n, gather, pseudo,
+            dρ, maxρ, configs, dists, pvec)
+    end
     ρhat
 end
 

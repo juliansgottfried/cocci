@@ -207,10 +207,10 @@ orderconfigs = function(configs, dists)
 	(sortedconfigs, sorteddists)
 end
 
-getstore = function(collect, nρ, config, pseudo)
+getstore = function(gather, nρ, config, pseudo)
 	store = zeros(Float64, nρ)
 	for i in 1:nρ
-		extract = collect[i][config[1], config[2]]
+		extract = gather[i][config[1], config[2]]
         tmpval = extract[2][extract[1] .== config[3]]
         if size(tmpval)[1] > 0 store[i] = tmpval[1] end
 	end
@@ -219,10 +219,10 @@ getstore = function(collect, nρ, config, pseudo)
 	store
 end
 
-getstoregrid = function(collect, nρ, config, pseudo)
+getstoregrid = function(gather, nρ, config, pseudo)
 	store = zeros(Float64, nρ, nρ)
 	for i in 1:nρ, j in 1:nρ
-		extract = collect[i, j][config[1], config[2]]
+		extract = gather[i, j][config[1], config[2]]
         tmpval = extract[2][extract[1] .== config[3]]
         if size(tmpval)[1] > 0 store[i, j] = tmpval[1] end
 	end
@@ -235,11 +235,11 @@ convertdist = function(dist, pvec)
     1 - sum(pvec .* (1 - dist) .^ (1:length(pvec)))
 end
 
-getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists, pvec)
+getlsubtask = function(n, gather, pseudo, dρ, maxρ, configs, dists, pvec)
     nρ = length(0:dρ:maxρ)
     
     loglik = zeros(Float64, nρ)
-    denom = getsum.(collect, n, pseudo)
+    denom = getsum.(gather, n, pseudo)
     
     sortedconfigs, sorteddists = orderconfigs(configs, dists)
 
@@ -250,7 +250,7 @@ getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists, pvec)
         tmpconfig = sortedconfigs[i, :]
         if tmpconfig != currentconfig
             currentconfig = tmpconfig
-            store = getstore(collect, nρ, currentconfig, pseudo)
+            store = getstore(gather, nρ, currentconfig, pseudo)
         end
 
         effdist = convertdist(sorteddists[i], pvec)
@@ -261,19 +261,19 @@ getlsubtask = function(n, collect, pseudo, dρ, maxρ, configs, dists, pvec)
     loglik
 end
 
-getl = function(n, collect0, collect1, pseudo0, pseudo1,
+getl = function(n, gather0, gather1, pseudo0, pseudo1,
             dρ, maxρ, configs, dists, pvec)
-    loglik0 = getlsubtask(n, collect0, pseudo0, dρ, maxρ, configs, dists, 1)
-    loglik1 = getlsubtask(n, collect1, pseudo1, dρ, maxρ, configs, dists, pvec)
+    loglik0 = getlsubtask(n, gather0, pseudo0, dρ, maxρ, configs, dists, 1)
+    loglik1 = getlsubtask(n, gather1, pseudo1, dρ, maxρ, configs, dists, pvec)
     (loglik0, loglik1)
 end
 
-getlgrid = function(n, collect, pseudo,
+getlgrid = function(n, gather, pseudo,
             dρ, maxρ, configs, dists, pvec)
     nρ = length(0:dρ:maxρ)
     
     loglik = zeros(Float64, nρ, nρ)
-    denom = getsum.(collect, n, pseudo)
+    denom = getsum.(gather, n, pseudo)
     
     sortedconfigs, sorteddists = orderconfigs(configs, dists)
 
@@ -284,7 +284,7 @@ getlgrid = function(n, collect, pseudo,
         tmpconfig = sortedconfigs[i, :]
         if tmpconfig != currentconfig
             currentconfig = tmpconfig
-            store = getstoregrid(collect, nρ, currentconfig, pseudo)
+            store = getstoregrid(gather, nρ, currentconfig, pseudo)
         end
 
         effdist0 = convertdist(sorteddists[i], 1)
@@ -300,11 +300,11 @@ getlgrid = function(n, collect, pseudo,
     loglik
 end
 
-getpseudo = function(collect, n)
+getpseudo = function(gather, n)
     pseudo = Inf
-    for i in eachindex(collect)
+    for i in eachindex(gather)
         for j in 1:(n - 1), k in 1:j
-            tmpvec = collect[i][j, k][2]
+            tmpvec = gather[i][j, k][2]
             nonzero = tmpvec[tmpvec .> 0]
             if length(nonzero) == 0 continue end
             tmpmin = minimum(nonzero)
