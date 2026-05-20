@@ -29,65 +29,58 @@ for i in 1:nρ, j in 1:nρ
 end
 
 plotit = function(i)
-    title = i == 1 ? "ρ0" : "ρ1"
+    xlab = i == 1 ? "ρ0" : "ρ1"
     dat = val[:, :, i, 2]
     if i == 2 dat = dat' end
     plot(ρs, dat,
         xlim = [0, maxρ], ylim = [0, maxρ],
-        xlabel = "recombination rate", ylabel = "estimate",
-        alpha = 0.5, color = :black, linewidth = 0.5,
-        title = title, label = false, grid = false)
+        xlabel = xlab, ylabel = "estimate",
+        alpha = 1, color = :black, linewidth = 0.4,
+        label = false, grid = false)
     plot!([0, maxρ], [0, maxρ], 
         color = :red, label = false)
 end
 
-makeheat = function(i)
+plotheat = function(i, cutoff)
+    title = i == 1 ? "ρ0 estimate" : "ρ1 estimate"
     diff = zeros(Float64, nρ, nρ)
     compρs = collect(ρs)
     compρs[1] = dρ
     if i == 1 
         for j in 1:nρ
-            diff[j, :] = log2.((val[j, :, i, 2] .- compρs[j]) .^ 2 ./ compρs[j])
+            diff[j, :] = (val[j, :, i, 2] .- compρs[j]) ./ compρs[j]
         end
     else
         for j in 1:nρ
-            diff[:, j] = log2.((val[:, j, i, 2] .- compρs[j]) .^ 2 ./ compρs[j])
+            diff[:, j] = (val[:, j, i, 2] .- compρs[j]) ./ compρs[j]
         end
     end
     if i != 1 diff = diff' end
-    diff
-end
 
-plotheat = function(input, i)
-    title = i == 1 ? "ρ0 estimate" : "ρ1 estimate"
-    heatmap(ρs, ρs, input,
+    diff[.!isfinite.(diff)] .= 0
+
+    diff[diff .> cutoff] .= cutoff
+    diff[diff .< -cutoff] .= -cutoff
+
+
+    heatmap(ρs, ρs, diff,
             xlabel = "ρ0", ylabel = "ρ1",
             xlim = [0, maxρ], ylim = [0, maxρ],
-            clim = (0, topval),
-            label = "sq", c = :thermal, title = title,
+            clim = (-cutoff, cutoff),
+            label = "sq", c = cgrad(:diff, rev = false), 
+            title = title,
             aspect_ratio = 1, colorbar_title = "relative error")
 end
 
 plotit(1)
 plotit(2)
 
-heat0 = makeheat(1)
-heat1 = makeheat(2)
-topval = max(maximum(heat0), maximum(heat1))
-
-plotheat(heat0, 1)
-plotheat(heat1, 2)
-
-# if rho0 is large, it estimates an equally large rho1
-# it says that the highest likelihood is for
-# both very large
-
-# rho0 is accurately estimated for all values
-# rho1 is accurate estimated if rho0 is low
-# but if rho0 is high, it thinks that rho1 is also how
-
+cutoff = 2
+plotheat(1, cutoff)
+plotheat(2, cutoff)
 
 # i mean it looks like the intercept of the rho1 estimate
 # is in fact the rho0 estimate
 # and then it goes up
 # for some reason the estimator for rho1 is actually rh0+rho1
+# if rho0 is high, why would rho1 be estimated to be high

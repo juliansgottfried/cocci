@@ -83,5 +83,3 @@ histogram(ρhat[:, 2], linecolor = :white, color = :black,
     xlim = [0, maxρ], normalize = true, bins = nbins,
     title = "ρ1 estimate",
     label = false, grid = false)
-
-# run grid of simulations but fitting with 0 and 1 model
