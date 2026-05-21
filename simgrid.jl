@@ -13,9 +13,25 @@ plotheat = function(input, lower, upper, title, colorbar_title)
             xlabel = "ρ0", ylabel = "ρ1",
             xlim = [0, maxρ], ylim = [0, maxρ],
             clim = (lower, upper),
-            c = cgrad(:diff, rev = false), 
+            color = cgrad(:thermal, rev = false), 
             title = title,
             aspect_ratio = 1, colorbar_title = colorbar_title)
+end
+
+plotq = function(xvar, idx)
+    if xvar == 1 eg = store[:, idx, :, xvar]
+    else eg = store[idx, :, :, xvar] end
+    xlab = xvar == 1 ? "ρ0" : "ρ1"
+    title = xvar == 1 ? "ρ1 = $(ρs[idx])" : "ρ1 = $(ρs[idx])"
+    plot(ρs, eg[:, 1], fillrange = eg[:, 3], 
+        xlabel = xlab, ylabel = "estimate",
+        title = title,
+        xlim = [0, maxρ], fillalpha = 0.15, color = "#29a0c8",
+        linecolor = false, label = false, grid = false)
+    plot!(ρs, maxρ * ones(nρ),linestyle = :dash, color = "#29a0c8", label = false)
+    plot!(ρs, zeros(nρ), linestyle = :dash, color = "#29a0c8", label = false)
+    plot!(ρs, eg[:, 2], color = :black, linewidth = 1.2, label = false)
+    plot!([0, maxρ], [0, maxρ], color = :red, label = false)
 end
 
 dρ = 0.5
@@ -34,12 +50,9 @@ for i in 1:nρ, j in 1:nρ store[i, j, :, :] = reduce(hcat, [quantile(gatherdata
 estimates = zeros(Float64, nρ, nρ, 2)
 for i in 1:nρ, j in 1:nρ estimates[i, j, :] = store[i, j, 2, :] end
 
-# plot example
-
+plotq(1, 1)
 plotheat(estimates[:, :, 1], 0, maxρ, "estimating ρ0", "")
 plotheat(estimates[:, :, 2], 0, maxρ, "estimating ρ1", "")
-
-
 
 lgetprior = function(λ)
     prior = log(λ) .- λ .* ρs
@@ -55,15 +68,30 @@ getcounts = function(input)
     counts
 end
 
-# bin by 2
+guass = function(σ, i, j)
+    (1 / (sqrt(2pi) * σ)) * exp(-(i^2 + j^2) / 2σ^2)
+end
+
+σ = 1
+gausskern = [guass(σ, i, j) for i in -1:1, j in -1:1]
+
 getprobs = function(i, j)
     counts = getcounts(gatherdata[i, j])
-    counts[counts .== 0] .= 0.01
-    for i in 2:(nρ - 1), j in 2:(nρ - 1)
-        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
+    counts[counts .== 0] .= 0.1
+    smoothed = copy(counts)
+    for i in 1:nρ, j in 1:nρ
+        bottom = max(1, i - 1)
+        top = min(nρ, i + 1)
+        left = max(1, j - 1)
+        right = min(nρ, j + 1)
+        sect = counts[bottom:top, left:right]
+        kern = gausskern[(bottom:top) .- i .+ 2, (left:right) .- j .+ 2]
+        smoothed[i, j] = sum(sect .* kern)
     end
-    counts ./ sum(counts)
+    smoothed ./ sum(smoothed)
 end
+
+plotheat(log.(getprobs(1, 1)), -Inf, Inf, "", "")
 
 allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
 
