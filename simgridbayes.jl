@@ -70,44 +70,66 @@ plotheatall = function(idx, ndata)
         xlim = [0, maxρ], ylim = [0, maxρ],
         c = cgrad(:default, rev = false),
         clim = (0, 20), grid = false,
-        aspect_ratio = 1, colorbar_title = "ρ0 hat")
+        aspect_ratio = 1, colorbar_title = "hat")
 end
 
 plotthresh = function(cutoff, use, ndata)
     p0 = zeros(Float64, nρ, nρ)
     for i in 1:nρ, j in 1:nρ
-        if skip[i, j] best[i, j] = Inf 
+        if skip[i, j] p0[i, j] = Inf 
         else
             vals = getstats(i, j, ndata, false)
             p0[i, j] = logsumexp(vals[:, 1])
         end
     end
     if use p0 = p0 .< cutoff end
-    heatmap(ρs, ρs, p0,
+    heatmap(ρs, ρs, p0',
         xlabel = "ρ0", ylabel = "ρ1",
         xlim = [0, maxρ], ylim = [0, maxρ],
-        c = cgrad(:default, rev = false),
+        c = cgrad(:default, rev = true),
         aspect_ratio = 1, colorbar_title = "log p0")
+end
+
+plotbic = function(ndata)
+    k = 1
+    bic = zeros(Float64, nρ, nρ)
+    for i in 1:nρ, j in 1:nρ
+        if skip[i, j] bic[i, j] = Inf 
+        else
+            vals = getstats(i, j, ndata, false)
+            bic0 = k * log(ndata) - 2maximum(vals[:, 1])
+            bic1 = k * log(ndata) - 2maximum(vals[1, :])
+            bic[i, j] = bic1 < bic0
+        end
+    end
+    heatmap(ρs, ρs, bic',
+        xlabel = "ρ0", ylabel = "ρ1",
+        xlim = [0, maxρ], ylim = [0, maxρ],
+        c = cgrad(:default, rev = true),
+        title = "support for varying model",
+        aspect_ratio = 1, colorbar_title = "")
 end
 
 # plots
 
 ndata = 500
-λ0 = 100
-λ1 = 1
-thresh = -7000
-prior0 = lgetprior(λ0)
+λ0 = 1
+λ1 = 10
+thresh = -900
+prior0 = lunifprior
 prior1 = lgetprior(λ1)
+
+plotbic(ndata)
 
 plotthresh(thresh, true, ndata)
 plotthresh(thresh, false, ndata)
 
-# plotheat(10, 1, thresh, ndata, false)
+# plotheat(2, 15, thresh, ndata, false)
+# plotheat(9, 1, thresh, ndata, false)
 plotheatall(1, ndata)
 plotheatall(2, ndata)
 
-# data
-plotheat(1, 1, thresh, ndata, true)
 
-largeeffect = logsumexp(getstats(1, 1, ndata, true)[:, 1])
-p0 .< cutoff
+# data
+iseffect = logsumexp(getstats(1, 1, ndata, true)[:, 1]) > thresh
+plotheat(1, 1, thresh, ndata, true)
