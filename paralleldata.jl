@@ -54,14 +54,14 @@ end =#
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
 	if ρ0 + ρ1 <= maxρ keep[i] = true end
 end
-@everywhere idx = (1:nρ^2)[keep]
+@everywhere idx = (1:nρ^2)[.!keep]
 
 pmap(idx) do i
 	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
-	filename = generate.getfilenamegrid("data", "5_19_26_c", ρ0, ρ1)
+	filename = generate.getfilenamegrid("data", "5_20_26_a", ρ0, ρ1)
 	if !isfile(filename)
-		ρhat = generate.repeatedgridbayes(gather, pseudo,
+		ρhat = generate.repeatedgrid(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
 		save_object(filename, ρhat)

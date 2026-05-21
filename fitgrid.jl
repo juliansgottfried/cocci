@@ -1,4 +1,4 @@
-using DelimitedFiles, Plots
+using DelimitedFiles, Plots, JLD2
 import StatsBase, StatsPlots, Distributions
 
 include("estimate.jl")
@@ -175,6 +175,7 @@ exp.(p0(ρhat)) < alpha
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+skip = isnothing.(data)
 
 counts2d = function(input, N)
     counts = zeros(Float64, nρ, nρ)
@@ -191,7 +192,10 @@ getprobs = function(focal)
         if skip[i, focal] continue end
         counts .+= counts2d(data[i, focal], J)
     end
-    counts[counts .== 0] .= minimum(counts[counts .> 0]) / 10
+    counts[counts .== 0] .= 1
+    for i in 2:(nρ - 1), j in 2:(nρ - 1)
+        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
+    end
     counts ./= sum(counts)
 end
 
@@ -205,15 +209,6 @@ allprobs = [getprobs(i) for i in 1:nρ]
 λ = 0.001
 prior = lgetprior(λ)
 
-subsample = similar(data)
-for i in 1:nρ, j in 1:nρ
-    if isnothing(data[i, j])
-        subsample[i, j] = nothing
-        continue
-    end
-    subsample[i, j] = data[i, j][1:S, :]
-end
-
 p0 = function(input, N)
     if isnothing(input) return end
     obs = counts2d(input, N)
@@ -222,11 +217,77 @@ p0 = function(input, N)
     terms[1]
 end
 
-p0s = [p0(subsample[i, j], S) for i in 1:nρ, j in 1:nρ]
+p0s = [p0(data[i, j], J) for i in 1:nρ, j in 1:nρ]
 p0s[isnothing.(p0s)] .= Inf
-alpha = 0.001
+alpha = 0.75
 cut = exp.(p0s) .< alpha
 heatmap(ρs, ρs, cut')
+heatmap(ρs, ρs, exp.(p0s)')
+
+exp(p0(ρhat, J)) < alpha
+
+# P(rho0 = r0, rho1 = r1 | rho0_hat, rho1_hat) = 
+# P(rho0_hat, rho1_hat | rho0 = r0, rho1 = r1)P(rho0 = r0, rho1 = r1) /
+# Σ_r P(rho0_hat, rho1_hat | rho1 = r)P(rho1 = r)
+
+# need P(rho0_hat, rho1_hat | rho0 = r0, rho1 = r1)P(rho0 = r0, rho1 = r1) /
+
+loadit(filename) = if isfile(filename) return load_object(filename) end
+data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+skip = isnothing.(data)
+
+counts2d = function(input)
+    counts = zeros(Float64, nρ, nρ)
+    idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
+    for j in 1:J
+        counts[idx[j, 1], idx[j, 2]] += 1
+    end
+    counts
+end
+
+getprobs = function(i, j)
+    if skip[i, j] return end
+    counts = counts2d(data[i, j])
+    counts[counts .== 0] .= 0.01
+    for i in 2:(nρ - 1), j in 2:(nρ - 1)
+        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
+    end
+    counts ./= sum(counts)
+end
+
+lgetprior = function(λ)
+    expprior = log(λ) .- λ .* ρs
+    expprior .- logsumexp(expprior)
+end
+
+allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
+
+λ = 0.001
+prior = lgetprior(λ)
+
+posterior = function(input)
+    if isnothing(input) return end
+    obs = counts2d(input)
+    terms = zeros(Float64, nρ, nρ)
+    for i in 1:nρ, j in 1:nρ
+        if skip[i, j] continue end
+        terms[i, j] = prior[i] + prior[j] + sum(log.(allprobs[i, j]) .* obs)
+    end
+    terms .-= logsumexp(terms)
+end
+
+posts = [posterior(data[i, j]) for i in 1:nρ, j in 1:nρ]
+heatmap(ρs, ρs, posts[20, 1]')
+
+p0s = zeros(Float64, nρ, nρ)
+for i in 1:nρ, j in 1:nρ
+    if skip[i, j] continue end
+    p0s[i, j] = sum(posts[i, j][:, 1])
+end
 heatmap(ρs, ρs, p0s')
+
+alpha = 0.75
+cut = exp.(p0s) .< alpha
+heatmap(ρs, ρs, cut')
 
 exp(p0(ρhat, J)) < alpha
