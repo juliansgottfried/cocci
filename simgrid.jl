@@ -1,79 +1,92 @@
 using Plots, JLD2, StatsBase
-import Distributions
 
 include("estimate.jl")
 include("generate.jl")
+
+logsumexp = function(x)
+    xmax = maximum(x)
+    xmax + log(sum(exp.(x .- xmax)))
+end
+
+plotheat = function(input, lower, upper, title, colorbar_title)
+    heatmap(ρs, ρs, input',
+            xlabel = "ρ0", ylabel = "ρ1",
+            xlim = [0, maxρ], ylim = [0, maxρ],
+            clim = (lower, upper),
+            c = cgrad(:diff, rev = false), 
+            title = title,
+            aspect_ratio = 1, colorbar_title = colorbar_title)
+end
 
 dρ = 0.5
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
+
 J = 500
 
-loadit(filename) = if isfile(filename) return load_object(filename) end
+gatherdata = [load_object(generate.getfilenamegridlocal("data", "5_20_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
 
-data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
-skip = isnothing.(data)
-
-val = zeros(Float64, nρ, nρ, 2, 3)
+store = zeros(Float64, nρ, nρ, 3, 2)
 qs = [0.055, 0.5, 0.945]
-for i in 1:nρ, j in 1:nρ
-    if skip[i, j] 
-        val[i, j, :, :] .= -Inf
-    else
-        tmpdat = data[i, j][:, 1:2]
-        val[i, j, 1, :] = quantile(tmpdat[:, 1], qs)
-        val[i, j, 2, :] = quantile(tmpdat[:, 2], qs)
+for i in 1:nρ, j in 1:nρ store[i, j, :, :] = reduce(hcat, [quantile(gatherdata[i, j][:, k], qs) for k in 1:2]) end
+
+estimates = zeros(Float64, nρ, nρ, 2)
+for i in 1:nρ, j in 1:nρ estimates[i, j, :] = store[i, j, 2, :] end
+
+# plot example
+
+plotheat(estimates[:, :, 1], 0, maxρ, "estimating ρ0", "")
+plotheat(estimates[:, :, 2], 0, maxρ, "estimating ρ1", "")
+
+
+
+lgetprior = function(λ)
+    prior = log(λ) .- λ .* ρs
+    prior .- logsumexp(prior)
+end
+
+getcounts = function(input)
+    counts = zeros(Float64, nρ, nρ)
+    idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
+    for j in 1:J
+        counts[idx[j, 1], idx[j, 2]] += 1
     end
+    counts
 end
 
-plotit = function(i)
-    xlab = i == 1 ? "ρ0" : "ρ1"
-    dat = val[:, :, i, 2]
-    if i == 2 dat = dat' end
-    plot(ρs, dat,
-        xlim = [0, maxρ], ylim = [0, maxρ],
-        xlabel = xlab, ylabel = "estimate",
-        alpha = 1, color = :black, linewidth = 0.4,
-        label = false, grid = false)
-    plot!([0, maxρ], [0, maxρ], 
-        color = :red, label = false)
-end
-
-plotheat = function(i, cutoff)
-    title = i == 1 ? "ρ0 estimate" : "ρ1 estimate"
-    diff = zeros(Float64, nρ, nρ)
-    compρs = collect(ρs)
-    compρs[1] = dρ
-    if i == 1 
-        for j in 1:nρ
-            diff[j, :] = (val[j, :, i, 2] .- compρs[j]) ./ compρs[j]
-        end
-    else
-        for j in 1:nρ
-            diff[:, j] = (val[:, j, i, 2] .- compρs[j]) ./ compρs[j]
-        end
+# bin by 2
+getprobs = function(i, j)
+    counts = getcounts(gatherdata[i, j])
+    counts[counts .== 0] .= 0.01
+    for i in 2:(nρ - 1), j in 2:(nρ - 1)
+        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
     end
-    if i != 1 diff = diff' end
-
-    diff[.!isfinite.(diff)] .= 0
-
-    diff[diff .> cutoff] .= cutoff
-    diff[diff .< -cutoff] .= -cutoff
-
-
-    heatmap(ρs, ρs, diff,
-            xlabel = "ρ0", ylabel = "ρ1",
-            xlim = [0, maxρ], ylim = [0, maxρ],
-            clim = (-cutoff, cutoff),
-            label = "sq", c = cgrad(:diff, rev = false), 
-            title = title,
-            aspect_ratio = 1, colorbar_title = "relative error")
+    counts ./ sum(counts)
 end
 
-plotit(1)
-plotit(2)
+allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
 
-cutoff = 2
-plotheat(1, cutoff)
-plotheat(2, cutoff)
+λ = 0.001
+prior = lgetprior(λ)
+
+posterior = function(input)
+    terms = [prior[i] + prior[j] + sum(log.(allprobs[i, j]) .* getcounts(input)) for i in 1:nρ, j in 1:nρ]
+    terms .- logsumexp(terms)
+end
+
+posts = [posterior(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
+
+pick0 = 1
+pick1 = 1
+plotheat(posts[pick0, pick1], -Inf, 0, "ρ0: $(ρs[pick0]), ρ0: $(ρs[pick1])", "log P")
+
+p0 = [sum(posts[i, j][:, 1]) for i in 1:nρ, j in 1:nρ]
+plotheat(p0, -Inf, 0, "", "P(0)")
+
+alpha = 0.05
+issig = exp.(p0s) .< alpha
+plotheat(issig, 0, 1, "", "significant")
+
+# real
+exp(sum(posterior(ρhat)[:, 1])) < alpha

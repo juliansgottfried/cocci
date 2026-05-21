@@ -1,26 +1,28 @@
 using DelimitedFiles, Plots, JLD2
-import StatsBase, StatsPlots, Distributions
+import StatsBase
 
 include("estimate.jl")
 include("generate.jl")
 include("kernels.jl")
 
-logsumexp = function(x)
-    xmax = maximum(x)
-    xmax + log(sum(exp.(x .- xmax)))
+plothist = function(input, nbins, title)
+    histogram(input, linecolor = :white, color = :black, 
+        xlabel = "recombination rate", ylabel = "density",
+        xlim = [0, maxρ], normalize = true, bins = nbins,
+        title = title,
+        label = false, grid = false)
 end
 
 dρ = 0.5
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
-J = 500
 
 n = 17
+J = 500
 
-gather = [load_object(generate.getfilenamegridlocal("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
-
-pseudo = estimate.getpseudo(gather, n)
+gatherprob = [load_object(generate.getfilenamegridlocal("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+pseudo = estimate.getpseudo(gatherprob, n)
 
 covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
@@ -59,15 +61,17 @@ S = 500
 for i in 1:S
     subset = falses(mostloci)
     println(i)
+    
     while sum(subset) < nsample
         windowidx = StatsBase.sample((1:nwindow), 1)[1]
         subset = (bestchunk[:, end] .>= windowidx) .& (bestchunk[:, end] .<= windowidx + window)
     end
+
     sampleidx = StatsBase.sample((1:mostloci)[subset], nsample, replace = false)
     samples = bestchunk[sampleidx, :]
-
     configs = zeros(Int, Int(nsample * (nsample - 1) / 2), 3)
     dists = zeros(Float64, size(configs)[1])
+    
     for i in 2:nsample
         for j in 1:(i - 1)
             c = Int((i * (i - 3)) / 2 + 1 + j)
@@ -76,8 +80,7 @@ for i in 1:S
         end
     end
 
-
-    loglik = estimate.getlgrid(n, gather, pseudo,
+    loglik = estimate.getlgrid(n, gatherprob, pseudo,
         dρ, maxρ, configs, dists, pvec)
     idx = argmax(loglik)
     bestρ0 = dρ * (idx[1] - 1)
@@ -86,208 +89,5 @@ for i in 1:S
 end
 
 nbins = Int.(floor.(nρ ./ 1))
-histogram(ρhat[:, 1], linecolor = :white, color = :black, 
-    xlabel = "recombination rate", ylabel = "density",
-    xlim = [0, maxρ], normalize = true, bins = nbins,
-    title = "ρ0 estimate",
-    label = false, grid = false)
-histogram(ρhat[:, 2], linecolor = :white, color = :black,
-    xlabel = "recombination rate", ylabel = "density",
-    xlim = [0, maxρ], normalize = true, bins = nbins,
-    title = "ρ1 estimate",
-    label = false, grid = false)
-
-
-
-loadit(filename) = if isfile(filename) return load_object(filename) end
-data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
-
-getcounts = function(input)
-    idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
-    [sum(idx[:, i] .== j) for j in 1:nρ, i in 1:2]
-end
-
-getprob = function(focal)
-    focal = 20
-    counts = zeros(Int, nρ, 2)
-    for i in 1:nρ
-        if skip[i, focal] continue end
-        counts .+= getcounts(data[i, focal])
-    end
-    prob = counts ./ sum(counts, dims = 1)
-    probsmooth = prob
-    for i in 2:(nρ - 1)
-        probsmooth[i, :] = sum(prob[(i - 1):(i + 1), :], dims = 1) ./ 3
-    end
-    # probsmooth[probsmooth .== 0] .= minimum(probsmooth[probsmooth .> 0]) / 10
-    probsmooth[:, 1] ./= sum(probsmooth[:, 1])
-    probsmooth[:, 2] ./= sum(probsmooth[:, 2])
-    plot(ρs, probsmooth)
-    [Distributions.Multinomial(S, probsmooth[:, 1]); Distributions.Multinomial(S, probsmooth[:, 2])]
-end
-
-distr = [getprob(i) for i in 1:nρ]
-
-lgetprior = function(λ)
-    expprior = log(λ) .- λ .* ρs
-    expprior .- logsumexp(expprior)
-end
-
-λ = 0.001
-prior = lgetprior(λ)
-
-subsample = similar(data)
-for i in 1:nρ, j in 1:nρ
-    if isnothing(data[i, j])
-        subsample[i, j] = nothing
-        continue
-    end
-    subsample[i, j] = data[i, j][1:S, :]
-end
-
-p0 = function(input)
-    if isnothing(input) return end
-    obs = getcounts(input)
-    terms = [prior[i] + Distributions.logpdf(distr[i][1], obs[:, 1]) + Distributions.logpdf(distr[i][2], obs[:, 2]) for i in 1:nρ]
-    terms .-= logsumexp(terms)
-    # plot(ρs, terms, grid = false, label = false, color = :black)
-    terms[1]
-end
-
-p0s = [p0(subsample[i, j]) for i in 1:nρ, j in 1:nρ]
-p0s[isnothing.(p0s)] .= Inf
-alpha = 0.01
-cut = exp.(p0s) .< alpha
-heatmap(ρs, ρs, cut')
-
-exp.(p0(ρhat)) < alpha
-
-
-
-
-# remove multinomial because normalization constant cancels 
-
-# P(rho1 = 0 | rho0_hat, rho1_hat) = 
-# P(rho0_hat, rho1_hat | rho1 = 0)P(rho1 = 0) /
-# Σ_r P(rho0_hat, rho1_hat | rho1 = r)P(rho1 = r)
-
-
-
-loadit(filename) = if isfile(filename) return load_object(filename) end
-data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
-skip = isnothing.(data)
-
-counts2d = function(input, N)
-    counts = zeros(Float64, nρ, nρ)
-    idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
-    for j in 1:N
-        counts[idx[j, 1], idx[j, 2]] += 1
-    end
-    counts
-end
-
-getprobs = function(focal)
-    counts = zeros(Float64, nρ, nρ)
-    for i in 1:nρ
-        if skip[i, focal] continue end
-        counts .+= counts2d(data[i, focal], J)
-    end
-    counts[counts .== 0] .= 1
-    for i in 2:(nρ - 1), j in 2:(nρ - 1)
-        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
-    end
-    counts ./= sum(counts)
-end
-
-lgetprior = function(λ)
-    expprior = log(λ) .- λ .* ρs
-    expprior .- logsumexp(expprior)
-end
-
-allprobs = [getprobs(i) for i in 1:nρ]
-
-λ = 0.001
-prior = lgetprior(λ)
-
-p0 = function(input, N)
-    if isnothing(input) return end
-    obs = counts2d(input, N)
-    terms = [prior[i] + sum(log.(allprobs[i]) .* obs) for i in 1:nρ]
-    terms .-= logsumexp(terms)
-    terms[1]
-end
-
-p0s = [p0(data[i, j], J) for i in 1:nρ, j in 1:nρ]
-p0s[isnothing.(p0s)] .= Inf
-alpha = 0.75
-cut = exp.(p0s) .< alpha
-heatmap(ρs, ρs, cut')
-heatmap(ρs, ρs, exp.(p0s)')
-
-exp(p0(ρhat, J)) < alpha
-
-# P(rho0 = r0, rho1 = r1 | rho0_hat, rho1_hat) = 
-# P(rho0_hat, rho1_hat | rho0 = r0, rho1 = r1)P(rho0 = r0, rho1 = r1) /
-# Σ_r P(rho0_hat, rho1_hat | rho1 = r)P(rho1 = r)
-
-# need P(rho0_hat, rho1_hat | rho0 = r0, rho1 = r1)P(rho0 = r0, rho1 = r1) /
-
-loadit(filename) = if isfile(filename) return load_object(filename) end
-data = [loadit(generate.getfilenamegridlocal("data", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
-skip = isnothing.(data)
-
-counts2d = function(input)
-    counts = zeros(Float64, nρ, nρ)
-    idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
-    for j in 1:J
-        counts[idx[j, 1], idx[j, 2]] += 1
-    end
-    counts
-end
-
-getprobs = function(i, j)
-    if skip[i, j] return end
-    counts = counts2d(data[i, j])
-    counts[counts .== 0] .= 0.01
-    for i in 2:(nρ - 1), j in 2:(nρ - 1)
-        counts[i, j] = sum(counts[(i - 1):(i + 1), (j - 1):(j + 1)]) / 9
-    end
-    counts ./= sum(counts)
-end
-
-lgetprior = function(λ)
-    expprior = log(λ) .- λ .* ρs
-    expprior .- logsumexp(expprior)
-end
-
-allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
-
-λ = 0.001
-prior = lgetprior(λ)
-
-posterior = function(input)
-    if isnothing(input) return end
-    obs = counts2d(input)
-    terms = zeros(Float64, nρ, nρ)
-    for i in 1:nρ, j in 1:nρ
-        if skip[i, j] continue end
-        terms[i, j] = prior[i] + prior[j] + sum(log.(allprobs[i, j]) .* obs)
-    end
-    terms .-= logsumexp(terms)
-end
-
-posts = [posterior(data[i, j]) for i in 1:nρ, j in 1:nρ]
-heatmap(ρs, ρs, posts[20, 1]')
-
-p0s = zeros(Float64, nρ, nρ)
-for i in 1:nρ, j in 1:nρ
-    if skip[i, j] continue end
-    p0s[i, j] = sum(posts[i, j][:, 1])
-end
-heatmap(ρs, ρs, p0s')
-
-alpha = 0.75
-cut = exp.(p0s) .< alpha
-heatmap(ρs, ρs, cut')
-
-exp(p0(ρhat, J)) < alpha
+plothist(ρhat[:, 1], nbins, "ρ0 estimate")
+plothist(ρhat[:, 2], nbins, "ρ1 estimate")
