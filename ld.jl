@@ -31,11 +31,10 @@ rsq = [getrsq(i, prob0, n) for i in 1:nρ]
 
 G = 365
 ηs = 0.95:0.0001:0.9999
+nη = length(ηs)
 maxbrk = 50
 
 kernelcollect = kernels.getkernels(G, ηs, maxbrk)
-
-nη = length(ηs)
 
 accum = ones(Float64, nη, length(dists))
 for i in 1:nη
@@ -53,7 +52,7 @@ for i in eachindex(whichkernel)
 end
 
 plot(dists, plotrsq,
-    palette = palette([:red, :black], length(whichkernel)),
+    palette = palette([:black, :red], length(whichkernel)),
     linewidth = 0.5, alpha = 1,
     xlabel = "distance",
     ylabel = "r²",
