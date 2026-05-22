@@ -5,16 +5,16 @@ include("estimate.jl")
 include("generate.jl")
 include("kernels.jl")
 
-plothist = function(input, nbins, title)
+plothist = function(input, nbins, xlab)
     histogram(input, linecolor = :white, color = :black, 
-        xlabel = "recombination rate", ylabel = "density",
+        xlabel = string("estimated ", xlab), ylabel = "density",
         xlim = [0, maxρ], normalize = true, bins = nbins,
-        title = title,
+        title = "",
         label = false, grid = false)
 end
 
 dρ = 0.5
-maxρ = 20 - dρ
+maxρ = 19.5 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
 
@@ -28,7 +28,7 @@ covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 L = maximum(alleles[:, end])
-chunksize = Int(floor(L / 100))
+chunksize = Int(floor(L / 50))
 
 bestchunk = nothing
 mostloci = 0
@@ -47,7 +47,7 @@ for i in 1:(L - chunksize)
 end
 
 nsample = 50
-window = 10000
+window = 160000
 nwindow = chunksize - window
 
 # G = 365
@@ -56,7 +56,7 @@ nwindow = chunksize - window
 # pvec = kernels.getkernels(G, η, maxbrk)
 pvec = 1
 
-S = 500
+S = J
 ρhat = zeros(Float64, S, 3)
 for i in 1:S
     subset = falses(mostloci)
@@ -89,5 +89,5 @@ for i in 1:S
 end
 
 nbins = Int.(floor.(nρ ./ 1))
-plothist(ρhat[:, 1], nbins, "ρ0 estimate")
-plothist(ρhat[:, 2], nbins, "ρ1 estimate")
+plothist(ρhat[:, 1], nbins, "ρ0")
+plothist(ρhat[:, 2], nbins, "ρ1")

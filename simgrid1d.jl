@@ -65,75 +65,66 @@ getprior = function(λ)
     prior .- logsumexp(prior)
 end
 
-getcounts = function(input)
-    counts = zeros(Float64, nρ, nρ)
+getcounts1d = function(input)
+    counts = zeros(Float64, nρ, 2)
     idx = Int.(div.(input[:, 1:2], dρ)) .+ 1
-    for i in 1:J
-        counts[idx[i, 1], idx[i, 2]] += 1
+    for j in 1:J
+        counts[idx[j, 1], 1] += 1
+        counts[idx[j, 2], 2] += 1
     end
     counts
 end
 
-guass = function(σ, i, j)
-    (1 / (sqrt(2pi) * σ)) * exp(-(i^2 + j^2) / 2σ^2)
+guass1d = function(σ, i)
+    (1 / (sqrt(2pi) * σ)) * exp(-i^2 / 2σ^2)
 end
 
-σ = 0.8 # 0.8
-gausskern = [guass(σ, i, j) for i in -1:1, j in -1:1]
+σ = 1
+gausskern1d = guass1d.(σ, -1:1)
 
-getprobs = function(i, j)
-    counts = getcounts(gatherdata[i, j])
+getprobs1d = function(i, j)
+    counts = getcounts1d(gatherdata[i, j])
     counts[counts .== 0] .= 0.1
     smoothed = copy(counts)
-    for k in 1:nρ, l in 1:nρ
-        bottom = max(1, k - 1)
-        top = min(nρ, k + 1)
-        left = max(1, l - 1)
-        right = min(nρ, l + 1)
-        sect = counts[bottom:top, left:right]
-        kern = gausskern[(bottom:top) .- k .+ 2, (left:right) .- l .+ 2]
-        smoothed[k, l] = sum(sect .* kern)
+    for k in 1:nρ
+        lbound = max(1, k - 1)
+        rbound = min(nρ, k + 1)
+        sect = counts[lbound:rbound, :]
+        kern = gausskern1d[(lbound:rbound) .- k .+ 2]
+        smoothed[k, :] = sum(reduce(hcat, [sect[:, l] .* kern for l in 1:2]), dims = 1)
     end
-    log.(smoothed ./ sum(smoothed))
+    log.(reduce(hcat, [smoothed[:, l] ./ sum(smoothed[:, l]) for l in 1:2]))
 end
 
-# plotheat(getprobs(1, 39), -Inf, Inf, "", "", false)
+allprobs = [getprobs1d(i, j) for i in 1:nρ, j in 1:nρ]
 
-allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
-
-
-λ0 = 30 # 30
-λ1 = 2 # 2
+λ0 = 0.0001
+λ1 = 0.0001
 prior0 = getprior(λ0)
 prior1 = getprior(λ1)
 
-posterior = function(input)
-    tmpcounts = getcounts(input)
+posterior1d = function(input)
+    tmpcounts = getcounts1d(input)
     terms = [prior0[i] + prior1[j] + sum(allprobs[i, j] .* tmpcounts) for i in 1:nρ, j in 1:nρ]
     terms .-= logsumexp(terms)
-    terms[terms .== 0] .= maximum(terms[terms .< 0]) + log(10)
+    terms[terms .== 0] .= maximum(terms[terms .< 0]) + log(1000)
     terms
 end
 
-posts = [posterior(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
+posts = [posterior1d(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
 
-# pick0 = 20
-# pick1 = 10
-# plotheat(posts[pick0, pick1], -Inf, Inf, "ρ0: $(ρs[pick0]), ρ1: $(ρs[pick1])", "log P", false)
+pick0 = 1
+pick1 = 20
+# plotheat(posts[pick0, pick1], -1000, Inf, "ρ0: $(ρs[pick0]), ρ1: $(ρs[pick1])", "log P", false)
 
 p0 = [logsumexp(posts[i, j][:, 1]) for i in 1:nρ, j in 1:nρ]
 plotheat(p0, -Inf, Inf, "P(ρ1 = 0)", "log", false)
 
-bottomn = 2
-alpha = 0.05
-cutoff = Int(floor(alpha * bottomn * nρ)) + 1
-thresh = sort(reduce(vcat, p0[:, 1:bottomn]))[cutoff]
-issig = p0 .< thresh
+alpha = -20000
+sum(p0[:, 3:end] .< alpha) / sum(p0 .< alpha)
+
+issig = p0 .< alpha
 plotheat(issig, 0, 1, "significance", "", false)
 
 # real
-plotheat(posterior(ρhat), -Inf, Inf, "", "", false)
-logsumexp(posterior(ρhat)[:, 1]) < thresh
-
-logsumexp(posterior(ρhat)[:, 1])
--247.04
+exp(sum(posterior(ρhat)[:, 1])) < alpha
