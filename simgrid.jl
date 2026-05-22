@@ -78,7 +78,7 @@ guass = function(σ, i, j)
     (1 / (sqrt(2pi) * σ)) * exp(-(i^2 + j^2) / 2σ^2)
 end
 
-σ = 0.8 # 0.8
+σ = 0.8
 gausskern = [guass(σ, i, j) for i in -1:1, j in -1:1]
 
 getprobs = function(i, j)
@@ -102,8 +102,8 @@ end
 allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
 
 
-λ0 = 30 # 30
-λ1 = 2 # 2
+λ0 = 30
+λ1 = 2
 prior0 = getprior(λ0)
 prior1 = getprior(λ1)
 
