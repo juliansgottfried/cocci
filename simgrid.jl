@@ -110,22 +110,22 @@ prior1 = getprior(λ1)
 posterior = function(input)
     tmpcounts = getcounts(input)
     terms = [prior0[i] + prior1[j] + sum(allprobs[i, j] .* tmpcounts) for i in 1:nρ, j in 1:nρ]
+    # terms[terms .== 0] .= maximum(terms[terms .< 0]) + log(10)
     terms .-= logsumexp(terms)
-    terms[terms .== 0] .= maximum(terms[terms .< 0]) + log(10)
     terms
 end
 
 posts = [posterior(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
 
-# pick0 = 20
-# pick1 = 10
+# pick0 = 10
+# pick1 = 20
 # plotheat(posts[pick0, pick1], -Inf, Inf, "ρ0: $(ρs[pick0]), ρ1: $(ρs[pick1])", "log P", false)
 
 p0 = [logsumexp(posts[i, j][:, 1]) for i in 1:nρ, j in 1:nρ]
 plotheat(p0, -Inf, Inf, "P(ρ1 = 0)", "log", false)
 
 bottomn = 2
-alpha = 0.05
+alpha = 0.01
 cutoff = Int(floor(alpha * bottomn * nρ)) + 1
 thresh = sort(reduce(vcat, p0[:, 1:bottomn]))[cutoff]
 issig = p0 .< thresh
@@ -134,6 +134,3 @@ plotheat(issig, 0, 1, "significance", "", false)
 # real
 plotheat(posterior(ρhat), -Inf, Inf, "", "", false)
 logsumexp(posterior(ρhat)[:, 1]) < thresh
-
-logsumexp(posterior(ρhat)[:, 1])
--247.04
