@@ -101,7 +101,6 @@ end
 
 allprobs = [getprobs(i, j) for i in 1:nρ, j in 1:nρ]
 
-
 λ0 = 30
 λ1 = 2
 prior0 = getprior(λ0)
@@ -124,8 +123,9 @@ posts = [posterior(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
 p0 = [logsumexp(posts[i, j][:, 1]) for i in 1:nρ, j in 1:nρ]
 plotheat(p0, -Inf, Inf, "P(ρ1 = 0)", "log", false)
 
-bottomn = 2
+bottomn = 3
 alpha = 0.01
+# alpha = 1 / (bottomn * nρ)
 cutoff = Int(floor(alpha * bottomn * nρ)) + 1
 thresh = sort(reduce(vcat, p0[:, 1:bottomn]))[cutoff]
 issig = p0 .< thresh
