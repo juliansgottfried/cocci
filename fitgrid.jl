@@ -94,4 +94,4 @@ nbins = Int.(floor.(nρ ./ 1))
 plothist(ρhat[:, 1], nbins, "ρ0")
 plothist(ρhat[:, 2], nbins, "ρ1")
 
-quantile(ρhat[:, 2], 0.5)
+writedlm("outputs/rhohat.csv",  ρhat, ',')

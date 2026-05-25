@@ -116,7 +116,6 @@ newdata %>%
 write_csv(newdata %>% select(time, all), col_names = F, "rodent_data/covariate.csv")
 
 
-
 # some genomic plots
 # NW_004504307.1 NW_004504308.1 NW_004504309.1 NW_004504310.1
 filtered <- genotypes %>% filter(Chromosome == "NW_004504310.1")
@@ -134,5 +133,84 @@ ggplot(filtered, aes(y = Position, x = as.factor(p))) +
     geom_hline(yintercept = 2529000, color = "red") +
     theme_classic()
 
+# some other plots
+rhohat <- read_csv("outputs/rhohat.csv", col_names = F)
+rhopost <- read_csv("outputs/rhohat_posterior.csv", col_names = F)
+p0 <- read_csv("outputs/p0.csv", col_names = F)
 
-(160000 / (28.9 * 10^6)) * 10^7
+coquina <- c("#1e0b0c","#8c618f","#b0aba5","#dec885","white")
+bg.color <- coquina[1]
+text.color <- colorspace::lighten(coquina[1],amount=0.8)
+
+rhohat %>% 
+    pivot_longer(cols = X1:X2, names_to="X", values_to="Y") %>% 
+    ggplot(aes(x=Y, fill=X))+
+    labs(fill="parameter", x= "estimate")+
+    scale_fill_manual(labels = c("alpha", "beta"), values = c(coquina[2], coquina[4])) +
+    geom_density(color=coquina[1], alpha=0.7)+
+    theme_classic()+
+    theme(panel.background=element_rect(fill=bg.color,color=bg.color),
+          plot.background=element_rect(fill=bg.color,color=bg.color),
+          legend.background=element_rect(fill=bg.color,color=bg.color),
+          text=element_text(color=text.color,size=12,family="mono"),
+          axis.text=element_text(color=text.color),
+          axis.text.x=element_text(vjust=0),
+          axis.title.y=element_text(vjust=3),
+          axis.title.x=element_text(vjust=-1),
+          axis.line=element_line(color=text.color),
+          axis.ticks=element_line(color=text.color),
+          legend.title=element_text(vjust=4),
+          plot.margin=margin(r=15,t=15,l=15,b=15))
+
+rhos = seq(from=0, to = 19, by = 0.5)
+p0 <- p0 %>% 
+    mutate(alpha = seq(from=0, to = 19, by = 0.5)) %>% 
+    pivot_longer(cols = -alpha, names_to = "beta")
+p0$beta <- rhos[as.numeric(str_split(p0$beta, "X",simplify = T)[,2])]
+
+ggplot(p0,aes(x=alpha,y=beta,fill=value))+
+    geom_tile()+
+    scale_fill_gradientn(
+        name="log P(beta = 0)",
+        colors=coquina)+
+    xlab("alpha")+ylab("beta")+
+    theme_classic()+
+    coord_equal()+
+    theme(panel.background=element_rect(fill=bg.color,color=bg.color),
+          plot.background=element_rect(fill=bg.color,color=bg.color),
+          legend.background=element_rect(fill=bg.color,color=bg.color),
+          text=element_text(color=text.color,size=12,family="mono"),
+          axis.text=element_text(color=text.color),
+          axis.text.x=element_text(vjust=0),
+          axis.title.y=element_text(vjust=3),
+          axis.title.x=element_text(vjust=-1),
+          axis.line=element_line(color=text.color),
+          axis.ticks=element_line(color=text.color),
+          legend.title=element_text(vjust=4),
+          plot.margin=margin(r=15,t=15,l=15,b=15))
+
+rhopost <- rhopost %>% 
+    mutate(alpha = seq(from=0, to = 19, by = 0.5)) %>% 
+    pivot_longer(cols = -alpha, names_to = "beta")
+rhopost$beta <- rhos[as.numeric(str_split(rhopost$beta, "X",simplify = T)[,2])]
+
+ggplot(rhopost,aes(x=alpha,y=beta,fill=value))+
+    geom_tile()+
+    scale_fill_gradientn(
+        name="log P",
+        colors=coquina)+
+    xlab("alpha")+ylab("beta")+
+    theme_classic()+
+    coord_equal()+
+    theme(panel.background=element_rect(fill=bg.color,color=bg.color),
+          plot.background=element_rect(fill=bg.color,color=bg.color),
+          legend.background=element_rect(fill=bg.color,color=bg.color),
+          text=element_text(color=text.color,size=12,family="mono"),
+          axis.text=element_text(color=text.color),
+          axis.text.x=element_text(vjust=0),
+          axis.title.y=element_text(vjust=3),
+          axis.title.x=element_text(vjust=-1),
+          axis.line=element_line(color=text.color),
+          axis.ticks=element_line(color=text.color),
+          legend.title=element_text(vjust=4),
+          plot.margin=margin(r=15,t=15,l=15,b=15))

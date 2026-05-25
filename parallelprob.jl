@@ -56,7 +56,7 @@ end =#
 pmap(ρs) do ρ
 	filename = generate.getfilename("prob", "5_24_26_a", true, ρ)
 	if !isfile(filename)
-		results = estimate.montecarlo(n, l1, m, ρ0, 0, covariate)
+		results = estimate.montecarlo(n, l1, m, ρ, 0, covariate)
 		save_object(filename, results)
 	end
 end

@@ -134,3 +134,6 @@ plotheat(issig, 0, 1, "significance", "", false)
 # real
 plotheat(posterior(ρhat), -Inf, Inf, "", "", false)
 logsumexp(posterior(ρhat)[:, 1]) < thresh
+
+writedlm("outputs/p0.csv",  p0, ',')
+writedlm("outputs/rhohat_posterior.csv",  posterior(ρhat), ',')
