@@ -28,10 +28,11 @@ covariate = readdlm("rodent_data/covariate.csv", ',', Any, '\n')
 alleles = readdlm("sampling_data/alleles.csv", ',', Any, '\n')
 
 L = maximum(alleles[:, end])
-chunksize = Int(floor(L / 50))
+chunksize = Int(floor(L / 50)) # 50
 
 bestchunk = nothing
 mostloci = 0
+chunkidx = 0
 for i in 1:(L - chunksize)
     if mod(i, 1000) != 0 continue end
     chunkloci = (alleles[:, end] .>= i) .& (alleles[:, end] .<= i + chunksize)
@@ -43,11 +44,12 @@ for i in 1:(L - chunksize)
     if nloci > mostloci
         mostloci = nloci
         bestchunk = chunk
+        chunkidx = i
     end
 end
 
 nsample = 50
-window = 160000
+window = 160000 # 160000
 nwindow = chunksize - window
 
 # G = 365
@@ -91,3 +93,5 @@ end
 nbins = Int.(floor.(nρ ./ 1))
 plothist(ρhat[:, 1], nbins, "ρ0")
 plothist(ρhat[:, 2], nbins, "ρ1")
+
+quantile(ρhat[:, 2], 0.5)

@@ -324,6 +324,27 @@ repeated = function(gather0, gather1, pseudo0, pseudo1,
     ρhat
 end
 
+repeatedsingle = function(gather, pseudo,
+			n, l1, θ, nsample, J, dρ, maxρ,
+			ρ0, ρ1, covariate, pvec)
+    ρhat = zeros(Float64, J, 2)
+    for j in 1:J
+        println("sample $(j)")
+        configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        while length(configs) == 0
+            configs, dists = getconfigs(n, l1, ρ0, ρ1, covariate, θ, nsample, pvec)
+        end
+        loglik = estimate.getlsubtask(n, gather, pseudo,
+            dρ, maxρ, configs, dists, pvec)
+        idx = argmax(loglik)
+        lik = maximum(loglik)
+        bestρ = dρ * (idx - 1)
+        ρhat[j, :] = [bestρ; lik]
+    end
+    
+    ρhat
+end
+
 repeatedgrid = function(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)

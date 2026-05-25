@@ -13,7 +13,7 @@ addprocs(SlurmManager())
 @everywhere nsample = 50
 @everywhere J = 500
 
-@everywhere dρ = 0.5
+@everywhere dρ = 0.2
 @everywhere maxρ = 20 - dρ
 @everywhere ρs = 0:dρ:maxρ
 @everywhere nρ = length(ρs)
@@ -29,7 +29,8 @@ addprocs(SlurmManager())
 
 # @everywhere gather0 = [load_object(generate.getfilename("prob", "5_18_26_e", true, ρ)) for ρ in ρs]
 # @everywhere gather1 = [load_object(generate.getfilename("prob", "5_18_26_e", false, ρ)) for ρ in ρs]
-@everywhere gather = [load_object(generate.getfilenamegrid("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+# @everywhere gather = [load_object(generate.getfilenamegrid("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+@everywhere gather = [load_object(generate.getfilename("prob", "5_24_26_a", true, ρ)) for ρ in ρs]
 
 # @everywhere pseudo0 = estimate.getpseudo(gather0, n)
 # @everywhere pseudo1 = estimate.getpseudo(gather1, n)
@@ -48,15 +49,15 @@ addprocs(SlurmManager())
 	end
 end =#
 
-@everywhere keep = falses(nρ^2)
+#= @everywhere keep = falses(nρ^2)
 @everywhere for i in 1:nρ^2
 	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
 	if ρ0 + ρ1 <= maxρ keep[i] = true end
 end
-@everywhere idx = (1:nρ^2)[.!keep]
+@everywhere idx = (1:nρ^2)[.!keep] =#
 
-pmap(idx) do i
+#= pmap(idx) do i
 	ρ0 = ρs[Int(div(i - 1, nρ)) + 1]
 	ρ1 = ρs[Int(mod(i - 1, nρ)) + 1]
 	filename = generate.getfilenamegrid("data", "5_20_26_a", ρ0, ρ1)
@@ -64,6 +65,16 @@ pmap(idx) do i
 		ρhat = generate.repeatedgrid(gather, pseudo,
 			n, l1, θ, nsample, J, dρ, maxρ,
 			ρ0, ρ1, covariate, pvec)
+		save_object(filename, ρhat)
+	end
+end =#
+
+pmap(ρs) do ρ
+	filename = generate.getfilename("data", "5_24_26_a", true, ρ)
+	if !isfile(filename)
+		ρhat = generate.repeatedsingle(gather, pseudo,
+			n, l1, θ, nsample, J, dρ, maxρ,
+			ρ, 0, covariate, pvec)
 		save_object(filename, ρhat)
 	end
 end

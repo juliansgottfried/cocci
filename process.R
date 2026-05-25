@@ -114,3 +114,25 @@ newdata %>%
     facet_wrap(~species, ncol = 1) +
     theme_classic()
 write_csv(newdata %>% select(time, all), col_names = F, "rodent_data/covariate.csv")
+
+
+
+# some genomic plots
+# NW_004504307.1 NW_004504308.1 NW_004504309.1 NW_004504310.1
+filtered <- genotypes %>% filter(Chromosome == "NW_004504310.1")
+filtered$p <- rowSums(filtered %>% select(Sample1:Sample17)) / 17
+filtered <- filtered %>% filter(p <= 0.5)
+ggplot(filtered, aes(x = p)) +
+    geom_bar() +
+    theme_classic()
+ggplot(filtered, aes(x = Position)) +
+    geom_histogram(bins = 50) +
+    geom_vline(xintercept = 2529000, color = "red") +
+    theme_classic()
+ggplot(filtered, aes(y = Position, x = as.factor(p))) +
+    geom_violin() +
+    geom_hline(yintercept = 2529000, color = "red") +
+    theme_classic()
+
+
+(160000 / (28.9 * 10^6)) * 10^7

@@ -116,9 +116,9 @@ end
 
 posts = [posterior(gatherdata[i, j]) for i in 1:nρ, j in 1:nρ]
 
-# pick0 = 10
-# pick1 = 20
-# plotheat(posts[pick0, pick1], -Inf, Inf, "ρ0: $(ρs[pick0]), ρ1: $(ρs[pick1])", "log P", false)
+pick0 = 1
+pick1 = 1
+plotheat(posts[pick0, pick1], -Inf, Inf, "ρ0: $(ρs[pick0]), ρ1: $(ρs[pick1])", "log P", false)
 
 p0 = [logsumexp(posts[i, j][:, 1]) for i in 1:nρ, j in 1:nρ]
 plotheat(p0, -Inf, Inf, "P(ρ1 = 0)", "log", false)
