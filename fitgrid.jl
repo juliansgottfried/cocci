@@ -95,3 +95,8 @@ plothist(ρhat[:, 1], nbins, "ρ0")
 plothist(ρhat[:, 2], nbins, "ρ1")
 
 writedlm("outputs/rhohat.csv",  ρhat, ',')
+
+configs, dists = generate.getconfigs(n, 50, 5, 0, covariate, 20, 50, pvec)
+loglik = estimate.getlsubtask(n, gather, pseudo,
+    dρ, maxρ, configs, dists, pvec)
+writedlm("outputs/loglik.csv",  loglik, ',')

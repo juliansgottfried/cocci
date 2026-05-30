@@ -57,3 +57,7 @@ plot(dists, plotrsq,
     xlabel = "distance",
     ylabel = "r²",
     label = false, grid = false)
+
+writedlm("outputs/r2.csv",  plotrsq, ',')
+
+# reverse(ηs)[whichkernel]

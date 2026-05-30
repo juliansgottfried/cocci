@@ -3,7 +3,7 @@ using Plots, JLD2, StatsBase
 include("estimate.jl")
 include("generate.jl")
 
-dρ = 0.1
+dρ = 0.2
 maxρ = 20 - dρ
 nρ = length(0:dρ:maxρ)
 ρs = 0:dρ:maxρ
@@ -11,7 +11,7 @@ J = 500
 
 loadit(filename) = if isfile(filename) return load_object(filename) end
 
-data0 = [loadit(generate.getfilenamelocal("data", "5_18_26_d", true, ρ)) for ρ in 0:dρ:maxρ]
+data0 = [loadit(generate.getfilenamelocal("data", "5_24_26_a", true, ρ)) for ρ in 0:dρ:maxρ]
 data1 = [loadit(generate.getfilenamelocal("data", "5_18_26_d", false, ρ)) for ρ in 0:dρ:maxρ]
 skip = isnothing.(data0) .| isnothing.(data1)
 
@@ -93,3 +93,11 @@ rawplot(1, 1)
 rawplot(1, 2)
 rawplot(2, 1)
 rawplot(2, 2)
+
+
+raw = zeros(Float64, nρ, 3)
+qs = [0.055, 0.5, 0.945]
+for i in 1:nρ
+    raw[i, :] = quantile(data0[i][:, 1], qs)
+end
+writedlm("outputs/baseline.csv", raw, ',')

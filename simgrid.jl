@@ -132,8 +132,34 @@ issig = p0 .< thresh
 plotheat(issig, 0, 1, "significance", "", false)
 
 # real
-plotheat(posterior(ρhat), -Inf, Inf, "", "", false)
-logsumexp(posterior(ρhat)[:, 1]) < thresh
+realpost = posterior(ρhat)
+plotheat(realpost, -Inf, Inf, "", "", false)
+logsumexp(realpost[:, 1]) < thresh
 
 writedlm("outputs/p0.csv",  p0, ',')
 writedlm("outputs/rhohat_posterior.csv",  posterior(ρhat), ',')
+writedlm("outputs/sim_est_rho0.csv",  estimates[:, :, 1], ',')
+writedlm("outputs/sim_est_rho1.csv",  estimates[:, :, 2], ',')
+
+ρhat[argmax(ρhat[:,3]),:]
+ρs[argmax(realpost)[1]]
+ρs[argmax(realpost)[2]]
+
+gatherprob = [load_object(generate.getfilenamegridlocal("prob", "5_19_26_a", ρ0, ρ1)) for ρ0 in ρs, ρ1 in ρs]
+
+choose = gatherprob[39, 1]
+# prob = [sum(choose[i, j][2]) for i in 1:(n - 1), j in 1:(n - 1)] .+ 0
+prob = [choose[i, j][2][1] for i in 1:(n - 1), j in 1:(n - 1)]
+heatmap((log.(prob)'))
+heatmap(((prob')))
+writedlm("outputs/sampling_distr.csv", prob, ',')
+
+ρ = 0.1
+maxρ = 100 - dρ
+nρ = length(0:dρ:maxρ)
+ρs = 0:dρ:maxρ
+gatherprob = [load_object(generate.getfilenamelocal("prob", "5_18_26_b", true, ρ)) for ρ in ρs]
+overrho = [gatherprob[i][1, 1][2][1] for i in 1:nρ]
+writedlm("outputs/rhoprob.csv", overrho ./ sum(overrho), ',')
+
+
